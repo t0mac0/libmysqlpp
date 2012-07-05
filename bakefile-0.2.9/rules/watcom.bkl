@@ -1,0 +1,133 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2003-2007 Vaclav Slavik
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: watcom.bkl 1061 2007-09-24 17:15:05Z vaclavslavik $
+
+-->
+<makefile>
+
+    <set var="COMPILER">wat</set>
+    <set var="MAKEFILE_SYNTAX">watcom</set>
+    <set var="EOL_STYLE">dos</set>
+
+    <include file="makefile.bkl"/>
+
+    <!-- =============================================================== -->
+    <!--                   Compiler-specific tags:                       -->
+    <!-- =============================================================== -->
+
+    <define-tag name="cppflags-watcom" rules="exe,lib,dll,module">
+        <cppflags>$(value)</cppflags>
+    </define-tag>
+    <define-tag name="cflags-watcom" rules="exe,lib,dll,module">
+        <cflags>$(value)</cflags>
+    </define-tag>
+    <define-tag name="cxxflags-watcom" rules="exe,lib,dll,module">
+        <cxxflags>$(value)</cxxflags>
+    </define-tag>
+    <define-tag name="ldflags-watcom" rules="exe,dll,module">
+        <ldflags>$(value)</ldflags>
+    </define-tag>
+
+    <!-- =============================================================== -->
+    <!--                   Platform-specific tags:                       -->
+    <!-- =============================================================== -->
+
+    <if cond="PLATFORM_MSDOS=='1'">
+        <define-tag name="stack" rules="exe">
+            <set var="__stack_var">$(value)</set>
+        </define-tag>
+    </if>
+
+    <!-- =============================================================== -->
+    <!--                         "make clean":                           -->
+    <!-- =============================================================== -->
+
+    <action id="clean" template="__phony">
+        <set var="__builddir" eval="0">$(BUILDDIR)</set>
+        <command>
+            -if exist $(__builddir)\*$(OBJEXT) del $(__builddir)\*$(OBJEXT)
+            -if exist $(__builddir)\*.res del $(__builddir)\*.res
+            -if exist $(__builddir)\*.lbc del $(__builddir)\*.lbc
+            -if exist $(__builddir)\*.ilk del $(__builddir)\*.ilk
+            -if exist $(__builddir)\*.pch del $(__builddir)\*.pch
+        </command>
+    </action>
+
+
+    <!-- =============================================================== -->
+    <!--                     win32 resources:                            -->
+    <!-- =============================================================== -->
+
+    <if cond="PLATFORM_WIN32=='1'">
+
+    <define-tag name="win32-res" rules="exe,dll,module">
+        <set var="__win32res">$(sources2objects(value, id, '.res'))</set>
+        <set var="__win32res_flag">option resource=$(__win32res)</set>
+        <set var="__deps" append="1">$(__win32res)</set>
+    </define-tag>
+
+    <!-- compilation rule for .rc files:  -->
+    <define-rule name="__rc-to-res" extends="__any,compilation_rule">
+        <template>
+            <set var="__deps" append="1">.AUTODEPEND</set>
+            <set var="__command" eval="0">
+                wrc -q -ad -bt=nt -r -fo=$^@ $(__win32rc_flags) $&lt;
+            </set>
+        </template>
+        <define-tag name="parent-target">
+            <set var="__win32rc_flags">$(targets[value].__win32rc_flags)</set>
+        </define-tag>
+    </define-rule>
+
+    <!-- includes and defines should propagate to rc compilation, too: -->
+    <define-tag name="res-include" rules="exe,dll,module">
+        <set var="__win32rc_flags" append="1">
+            $(addPrefixIfNotEmpty('-i=',nativePaths(value)))</set>
+    </define-tag>
+    <define-tag name="res-define" rules="exe,dll,module">
+        <set var="__win32rc_flags" append="1">
+            $(addPrefixIfNotEmpty('-d',value))</set>
+    </define-tag>
+
+    </if>
+
+    <!-- =============================================================== -->
+    <!--                            output:                              -->
+    <!-- =============================================================== -->
+
+    <!-- see format_features.bkl for explanation: -->
+    <set var="FORMAT_OUTPUT_VARIABLES">
+        __targetdir __targetname __deps __command __is_phony
+    </set>
+
+    <output file="$(OUTPUT_FILE)" writer="watcom.empy"/>
+
+    <if cond="OPTIONS_FILE!='' and WRITE_OPTIONS_FILE=='1'">
+    <output file="$(os.path.join(os.path.dirname(OUTPUT_FILE), OPTIONS_FILE))"
+            writer="watcom-opts.empy"/>
+    </if>
+
+</makefile>

@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!-- $Id: man_bakefile.docbook 1334 2010-02-06 17:08:31Z vaclavslavik $ -->
+
+  <refentry id="man.bakefile">
+    <refmeta>
+      <refentrytitle>bakefile</refentrytitle>
+      <manvolnum>1</manvolnum>
+    </refmeta>
+    <refnamediv>
+      <refname>bakefile</refname>
+      <refpurpose>native makefiles generator</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+      <cmdsynopsis>
+        <command>bakefile</command>
+        <arg choice="opt">
+          <option>--version</option>
+        </arg>
+        <arg choice="opt">
+          <option>--help</option>
+        </arg>
+        <arg choice="plain">
+          <option>-f</option><replaceable class="parameter">FORMAT</replaceable>
+        </arg>
+        <arg choice="plain">
+          <option>-o</option><replaceable class="parameter">OUTFILE</replaceable>
+        </arg>
+        <arg choice="opt">
+          <option>--eol=[format|dos|unix|mac|native]</option>
+        </arg>
+        <arg choice="opt">
+          <option>--wrap-output=[no|<replaceable>LENGTH</replaceable>]</option>
+        </arg>
+        <arg choice="opt" rep="repeat" id="bakefile.command.variable">
+          <option>-D</option><replaceable
+            class="parameter">VAR</replaceable>=<replaceable class="parameter">VALUE</replaceable>
+        </arg>
+        <arg choice="opt" rep="repeat">
+          <option>-I</option><replaceable class="parameter">PATH</replaceable>
+        </arg>
+        <arg choice="opt">
+          <option>-v</option>
+        </arg>
+        <arg choice="opt">
+          <option>-q</option>
+        </arg>
+        <arg choice="opt">
+          <option>--dry-run</option>
+        </arg>
+        <arg choice="opt">
+          <option>--touch</option>
+        </arg>
+        <arg choice="opt">
+          <option>--dump</option>
+        </arg>
+        <arg choice="plain">
+          <replaceable class="parameter">file.bkl</replaceable>
+        </arg>
+      </cmdsynopsis>
+    </refsynopsisdiv>
+
+    <refsect1>
+      <title>Description</title>
+      <para>
+        <command>bakefile</command> creates various types of
+        Makefiles and project files from a single project
+        description called a "Bakefile".
+      </para>
+    </refsect1>
+
+    <refsect1>
+      <title>Command Line Options</title>
+      <para>
+        <variablelist>
+
+          <varlistentry>
+            <term>
+              <option>--version</option>
+            </term>
+            <listitem>
+              <para>
+                Display Bakefile version and exit.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-h</option>, <option>--help</option>
+            </term>
+            <listitem>
+              <para>
+                Display usage information and exit.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-f</option><replaceable
+                class="parameter">FORMAT</replaceable>,
+              <option>--format</option>=<replaceable
+                class="parameter">FORMAT</replaceable>
+            </term>
+            <listitem>
+              <para>
+                Specify output format. Bakefile supports the following formats:
+              </para>
+
+              <para>
+                <informaltable>
+                  <tgroup cols='2'>
+                    <thead>
+                      <row>
+                        <entry>Format</entry>
+                        <entry>File(s) Generated</entry>
+                      </row>
+                    </thead>
+
+                    <tbody>
+                      <row>
+                        <entry>autoconf</entry>
+                        <entry>Makefile.in for GNU Autoconf</entry>
+                      </row>
+
+                      <row>
+                        <entry>borland</entry>
+                        <entry>Makefile for Borland C++ and Borland
+                        make</entry>
+                      </row>
+
+                      <row>
+                        <entry>dmars</entry>
+                        <entry>Generic Makefile for Digital Mars C/C++</entry>
+                      </row>
+
+                      <row>
+                        <entry>dmars_smake</entry>
+                        <entry>Makefile for Digital Mars C/C++ with
+                        SMAKE</entry>
+                      </row>
+
+                      <row>
+                        <entry>gnu</entry>
+                        <entry>Makefile for GNU toolchain: GNU Make, GCC,
+                        etc.</entry>
+                      </row>
+
+                      <row>
+                        <entry>mingw</entry>
+                        <entry>Makefile for MinGW toolchain:
+                        mingw32-make, MinGW port of GCC, etc.</entry>
+                      </row>
+
+                      <row>
+                        <entry>msvc</entry>
+                        <entry>Makefile for Visual C++ with Microsoft
+                        nmake</entry>
+                      </row>
+
+                      <row>
+                        <entry>msvc6prj</entry>
+                        <entry>Microsoft Visual C++ 6.0 project files</entry>
+                      </row>
+
+                      <row>
+                        <entry>msevc4prj</entry>
+                        <entry>Microsoft Embedded Visual C++ 4 project
+                        files</entry>
+                      </row>
+
+                      <row>
+                        <entry>msvs2003prj</entry>
+                        <entry>
+                          MS Visual Studio 2003 project files
+                        </entry>
+                      </row>
+
+                      <row>
+                        <entry>msvs2005prj</entry>
+                        <entry>
+                          MS Visual Studio 2005 project files
+                        </entry>
+                      </row>
+
+                      <row>
+                        <entry>msvs2008prj</entry>
+                        <entry>
+                          MS Visual Studio 2008 project files
+                        </entry>
+                      </row>
+
+                      <row>
+                        <entry>suncc</entry>
+                        <entry>GNU makefile for SunCC compiler</entry>
+                      </row>
+
+                      <row>
+                        <entry>symbian</entry>
+                        <entry>Symbian development files</entry>
+                      </row>
+
+                      <row>
+                        <entry>watcom</entry>
+                        <entry>Makefile for OpenWatcom C/C++</entry>
+                      </row>
+
+                      <row>
+                        <entry>xcode2</entry>
+                        <entry>Apple Xcode 2.4 project files</entry>
+                      </row>
+                    </tbody>
+                  </tgroup>
+                </informaltable>
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-o</option><replaceable
+                class="parameter">OUTFILE</replaceable>,
+              <option>--output</option>=<replaceable
+                class="parameter">OUTFILE</replaceable>
+            </term>
+            <listitem>
+              <para>
+                File to write generated makefile to. For those backends
+                that generate more than one file, this option specifies
+                the name of the main makefile.
+              </para>
+              <para>
+                This option has special meaning for msvs200xprj formats: by
+                default, both the project files (one for each target) and a
+                solution file, containing all the project files, are generated.
+                However if OUTFILE is a file with .vcproj extension, then only
+                the (necessarily unique) project file will be generated.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-D</option><replaceable
+            class="parameter">VAR</replaceable>=<replaceable class="parameter">VALUE</replaceable>
+            </term>
+            <listitem>
+              <para>
+                Define Bakefile variable. This definition overrides any
+                definition from the ruleset or input makefile. You can use it
+                to customize generated output.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--eol</option>=<replaceable
+              class="parameter">[format|dos|unix|mac|native]</replaceable>
+            </term>
+            <listitem>
+              <para>
+                Change the type of line endings used by general files.
+                <literal>dos</literal>, <literal>unix</literal> and
+                <literal>mac</literal> specify the line endings used by
+                respective platforms. <literal>native</literal> will use
+                line endings of the platform Bakefile is ran on (doing this is
+                usually a bad idea, but it is useful e.g. when checking
+                generated files into RCS system that can't deal with line
+                endings correctly, such as CVS). The default value is
+                <literal>format</literal> and means that the most appropriate
+                line endings for the output format will
+                be used - Windows makefiles will use DOS line endings,
+                Autoconf makefiles will use Unix ones and so on.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--wrap-output</option>=<replaceable
+              class="parameter">[no|LENGTH]</replaceable>
+            </term>
+            <listitem>
+              <para>
+                Change line wrappings behavior. By default, Bakefile wraps
+                generated makefiles so that lines don't exceed 75 characters.
+                Use this option to either change the limit or to disable
+                wrapping entirely by using <literal>no</literal> as the value.
+              </para>
+            </listitem>
+          </varlistentry>
+
+
+          <varlistentry>
+            <term>
+              <option>-I</option><replaceable class="parameter">PATH</replaceable>
+            </term>
+            <listitem>
+              <para>
+                Add path to the list of directories where Bakefile looks for
+                rules and output templates.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--dry-run</option>
+            </term>
+            <listitem>
+              <para>
+                Process the bakefile normally, but instead of creating or
+                modifying files, just print which files would be changed
+                without actually modifying them.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-v</option>, <option>--verbose</option>
+            </term>
+            <listitem>
+              <para>Be verbose.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-q</option>, <option>--quiet</option>
+            </term>
+            <listitem>
+              <para>Supress all output except for errors.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--touch</option>
+            </term>
+            <listitem>
+              <para>
+                Always touch output files, even if their content doesn't
+                change.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--debug</option>
+            </term>
+            <listitem>
+              <para>show internal debugging information</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--dump</option>
+            </term>
+            <listitem>
+              <para>
+                Dump all Bakefile variables and targets to standard output
+                instead of generating output. This is only useful for
+                debugging Bakefile or ill-behaving makefiles.
+              </para>
+            </listitem>
+          </varlistentry>
+
+
+          <varlistentry>
+            <term>
+              <option>--output-deps</option>=<replaceable
+              class="parameter">FILE</replaceable>
+            </term>
+            <listitem>
+              <para>
+                Output dependency information needed by
+                <command>bakefile_gen</command> utility
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--output-changes</option>=<replaceable
+              class="parameter">FILE</replaceable>
+            </term>
+            <listitem>
+              <para>
+                Store list of changed files to the given file
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--xml-cache</option>=<replaceable
+              class="parameter">FILE</replaceable>
+            </term>
+            <listitem>
+              <para>
+                specify cache file where <command>bakefile_gen</command>
+                stores pre-parsed XML files
+              </para>
+            </listitem>
+          </varlistentry>
+
+        </variablelist>
+      </para>
+    </refsect1>
+
+    <refsect1>
+      <title>Environment Variables</title>
+      <para>
+        <variablelist>
+          <varlistentry id="searchpaths">
+            <term>BAKEFILE_PATHS</term>
+            <listitem>
+              <para>
+                List of directories where ruleset files are looked for (syntax
+                is same as in <varname>PATH</varname>). Bakefile's data
+                directory is always searched in addition to paths listed in
+                <varname>BAKEFILE_PATHS</varname>, but
+                <varname>BAKEFILE_PATHS</varname> has higher priority.
+              </para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </para>
+    </refsect1>
+
+  </refentry>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!-- $Id: faq.docbook 1185 2008-01-21 22:32:34Z vaclavslavik $ -->
+
+<chapter id="ch.faq">
+  <title>Frequently encountered issues</title>
+
+  <section id="sec.faq1">
+    <title>FIXME</title>
+
+    <para>
+      FIXME
+    </para>
+  </section>
+
+</chapter>

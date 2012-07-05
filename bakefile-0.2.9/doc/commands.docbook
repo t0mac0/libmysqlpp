@@ -1,0 +1,1290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!-- $Id: commands.docbook 1214 2008-05-09 15:43:15Z vadz $ -->
+
+<chapter id="ch.commands">
+    <title>Commands Reference</title>
+    <para id="commands">
+        Commands are top-level makefile constructs. They have following form:
+        <programlisting><![CDATA[
+<COMMAND [PROPERTY="VALUE", ...]>
+    CONTENT
+</COMMAND>
+]]></programlisting>
+        Here, <varname>CONTENT</varname> is either a text value (as in e.g.
+        <xref linkend="cmd.set"/>) or XML subtree.
+    </para>
+
+
+    <section id="sec.makefile.cmds">
+      <title>Makefile Commands</title>
+
+    
+      <!-- //////////////////          set           ////////////////// -->
+
+
+      
+      <section id="cmd.set" xreflabel="set">
+          <title>set</title>
+          <para>
+            Sets a variable. There are two forms of the command. The first
+            one if for setting variables unconditionally:
+            <programlisting><![CDATA[
+<set var="NAME" [append="APP"] [prepend="PREP"] [overwrite="OVERWRITE"]
+     [scope="SCOPE"] [make_var="MAKEVAR"] [hints="HINTS"]>
+  VALUE
+</set>
+  ]]></programlisting>
+            The other one resembles <emphasis>switch</emphasis> statement known
+            from C and is used to set the variable to one of possible values
+            depending on certain condition:
+            <programlisting><![CDATA[
+<set var="NAME" [append="APP"] [prepend="PREP"] [overwrite="OVERWRITE"]
+     [scope="SCOPE"] [make_var="MAKEVAR"] [hints="HINTS"]>
+  <if cond="COND">VALUE</if>
+  [
+  <if cond="COND">VALUE</if>
+  ...
+  ]
+</set>
+  ]]></programlisting>
+            If the second from is used then the variable is set to value from
+            the first <function>if</function> node whose condition is met, or
+            to empty string if no condition is met.
+            Note that conditions within one <function>set</function> command
+            <emphasis>must be mutually exclusive.</emphasis>
+          </para>
+          <para>
+              The value is any text that may contain
+              <link linkend="concept.variables">variable expansions</link>.
+          </para>
+          <para>
+              If an <link linkend="concept.option">option</link>
+              with same name exists, the variable takes precedence and the
+              option is shadowed by it. This behaviour allows you to hardcode
+              values for some ruleset's options in the makefile or to specify
+              the value on command line when running Bakefile.
+          </para>
+          <variablelist id="cmd.set.params">
+              <title>Parameters:</title>
+              <varlistentry>
+                  <term>var</term>
+                  <listitem>
+                      <para>
+                          Name of the variable to assign the value.
+                          Any constant expression is allowed for this
+                          attribute, not only literals.
+                          <programlisting><![CDATA[
+<set var="postfix">world</set>
+<set var="prefix">hello</set>
+
+<!-- the following <set> tag will create a "hello_world" variable: -->
+<set var="$(prefix)_$(postfix)">Hello world</set>
+<echo>$(hello_world)</echo>
+]]></programlisting>
+                     </para>
+                      <para role="default">
+                          Required parameter
+                      </para>
+                  </listitem>
+              </varlistentry>
+              <varlistentry>
+                  <term>append</term>
+                  <listitem>
+                      <para>
+                          If 1, the value is appended to previous value of the
+                          variable if it is already defined, with a space
+                          inserted between them. If the variable
+                          wasn't defined yet, the command behaves as if
+                          append=0.
+                          Following two <function>set</function>
+                          commands are equivalent:
+                          <programlisting><![CDATA[
+<set var="FOO" append="1">something</set>
+<set var="FOO">$(FOO) something</set>
+]]></programlisting>
+                      </para>
+                      <para role="default">
+                          Default value: 0
+                      </para>
+                  </listitem>
+              </varlistentry>
+              <varlistentry>
+                  <term>prepend</term>
+                  <listitem>
+                      <para>
+                          If 1, the value is prepended in front of previous 
+                          value of the variable if it is already defined
+                          (otherwise the command behaves as if prepend=0).
+                          Following two <function>set</function>
+                          commands are equivalent:
+                          <programlisting><![CDATA[
+<set var="FOO" prepend="1">something</set>
+<set var="FOO">something $(FOO)</set>
+]]></programlisting>
+                      </para>
+                      <para role="default">
+                          Default value: 0
+                      </para>
+                  </listitem>
+              </varlistentry>
+              <varlistentry>
+                  <term>cond</term>
+                  <listitem>
+                      <para>
+                          If present, the variable is set only if the condition
+                          is met. If the condition evaluates to 0, the variable
+                          is not set, if it evaluates to 1, the variable is set.
+                          If condition's value can't be determined at the time
+                          of makefile processing, a
+                          <link linkend="concept.condvar">conditional variable
+                          </link> is created instead of ordinary variable.
+                          See <xref linkend="concept.conditions"/> for more
+                          details.
+                          <programlisting><![CDATA[
+<set var="FILES">
+  <if cond="BUILD=='debug'">foo_dbg.c</if>
+  <if cond="BUILD=='release'">foo.c</if>
+</set>
+]]></programlisting>
+                          The condition can also value special value
+                          <literal>target</literal>, which can only be used
+                          within <link linkend="concept.target">target</link>
+                          specification. In that case parent
+                          <link linkend="targets">target's condition</link>
+                          is used (or <literal>1</literal> if there's no
+                          condition set on the target).
+                          The condition can also be "<literal>target
+                            and</literal><emphasis>condexpr</emphasis>" in
+                          which case target's condition (if any) is combined
+                          with <emphasis>condexpr</emphasis>.
+                      </para>
+                      <para>
+                        The string with condition may itself be a
+                        constant expression, so you can write this:
+                        <programlisting><![CDATA[
+<set var="IsRelease">=='release'</set>
+<set var="CondDebug">BUILD=='debug'</set>
+<set var="FILES">
+  <if cond="BUILD$(IsRelease)">foo_dbg.c</if>
+  <if cond="$(CondDebug)">foo.c</if>
+</set>
+]]></programlisting>
+                      </para>
+                  </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>overwrite</term>
+                  <listitem>
+                      <para>
+                        If set to 0 and variable with this name already exists,
+                        then it's value is not changed (the default is to change
+                        it).
+                      </para>
+                      <para role="default">
+                        Default value: 1
+                      </para>
+                  </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>scope</term>
+                  <listitem>
+                    <para>
+                      Specify scope of variable being set. Possible values are
+                      <varname>local</varname> (current target if the command is
+                      applied on a target, same as <varname>global</varname>
+                      otherwise), <varname>global</varname> or a name of
+                      existing target (in which case the variable is set on
+                      that target).
+                    </para>
+                    <para>
+                      Can't be used with conditional variables.
+                    </para>
+                    <para role="default">
+                      Default value: local
+                    </para>
+                  </listitem>
+              </varlistentry>
+              <varlistentry>
+                  <term>make_var</term>
+                  <listitem>
+                      <para>
+                          If set to <literal>1</literal>, then the variable
+                          is preserved in the makefile instead of being
+                          substituted by Bakefile. This happens only if the
+                          output format supports it
+                          (<xref linkend="var.FORMAT_HAS_VARIABLES"/> is set to
+                          <literal>1</literal>) and if variable's value is not
+                          empty string. This settings is useful
+                          together with frequently used variables with long
+                          values, it helps reduce size of generated makefiles.
+                      </para>
+                      <para role="default">
+                          Default value: 0
+                      </para>
+                  </listitem>
+              </varlistentry>
+              <varlistentry>
+                  <term>hints</term>
+                  <listitem>
+                      <para>
+                          Comma-separated list of hint keywords. These hints
+                          are optional and Bakefile can (but doesn't have to)
+                          use them to better format generated makefiles. So
+                          far only <literal>files</literal> hint is supported.
+                          It tells Bakefile that the variable holds list of
+                          files and if it is either make or conditional
+                          variable, it is formatted in such way that only
+                          one file per line is written to the output (and
+                          therefore adding or removing files does only cause
+                          small differences).
+                      </para>
+                      <para role="default"></para>
+                  </listitem>
+              </varlistentry>
+          </variablelist>
+          <para role="example">
+              Example:
+              <programlisting><![CDATA[
+<set var="APP_VERSION">1.0.3</set>
+<set var="TAR_NAME">app-$(APP_VERSION).tar.gz</set>
+]]></programlisting>
+          </para>
+          <para role="seealso">
+              See also: <xref linkend="cmd.unset"/>
+          </para>
+      </section>
+
+
+
+
+      
+      <!-- //////////////////         unset          ////////////////// -->
+
+      
+      
+      
+      <section id="cmd.unset" xreflabel="unset">
+          <title>unset</title>
+          <para>
+              Unsets variable previously set by <xref linkend="cmd.set"/>. Note
+              that you can only unset a <emphasis>variable</emphasis>, not
+              an <link linkend="concept.option">option</link> or 
+              <link linkend="concept.condvar">conditional variable</link>.
+              <programlisting><![CDATA[
+<unset var="NAME"/>]]>
+  </programlisting>
+          </para>
+          <variablelist id="cmd.unset.params">
+              <title>Parameters:</title>
+              <varlistentry>
+                  <term>var</term>
+                  <listitem>
+                      <para>
+                          The meaning is same as in
+                          <link linkend="cmd.set.params">set's properties</link>.
+                      </para>
+                  </listitem>
+              </varlistentry>
+          </variablelist>
+      </section>
+
+
+      
+
+      
+      <!-- //////////////////       option          ////////////////// -->
+
+      
+      
+      <section id="cmd.option" xreflabel="option">
+        <title>option</title>
+        <para>
+          Adds an <link linkend="concept.option">option</link>
+          to the makefile.
+          <programlisting><![CDATA[
+<option name="NAME" [never_empty="NEVER_EMPTY"] [category="CATEGORY"]>
+  [<default-value [force="FORCE"]>DEFVALUE</default-value>]
+  [<description>DESC</description>]
+  [<values>VALUES</values>]
+  [<values-description>VALUES_DESC</values-description>]
+</option>
+]]></programlisting>
+          <varname>NAME</varname> is variable name under which the option is
+          used in the makefile (using same syntax as when expanding
+          <link linkend="concept.variables">variables</link>).
+          <varname>NAME</varname> is required, the rest of parameters is
+          optional.
+        </para>
+        <para>
+          <varname>DEFVALUE</varname> is default value of the
+          option, if appliable. It can be used by format backends that don't
+          support options and it is used as default in those that do. Use it
+          whenever possible.
+          Note that for options with listed values (see the <varname>VALUES</varname> 
+          parameter), the default value must be one of the values listed unless
+          <varname>FORCE</varname> is set to <literal>1</literal>.
+        </para>
+        <para>
+          <varname>FORCE</varname> can be <literal>0</literal> (the default) or 
+          <literal>1</literal> to indicate that Bakefile should not check that the 
+          default value is in the list of allowed values.
+          This is useful when you want to use e.g. a shell command as the default value
+          (<literal>$(shell some-command)</literal>) or an environment
+          variable <literal>$(MYENVVAR)</literal>. It is your responsibility
+          to ensure that the default value is a legal value if you use
+          <literal>force=1</literal>.
+        </para>
+        <para>
+          <varname>NEVER_EMPTY</varname> may be set to <literal>1</literal> to
+          tell Bakefile that it can treat the option as non-empty variable.
+          This is useful only rarely in situations when Bakefile requires some
+          non-empty value as tag's argument.
+        </para>
+        <para>
+          <varname>CATEGORY</varname> may be set to provide Bakefile
+          additional information about the option. Certain operations
+          (typically substitutions) may fail when applied to options unless
+          all of its possible values are known. Because many tags use
+          substitutions internally, this can be very limiting; the category
+          hint can be used to work around most common problems.
+
+          Possible values are <literal>unspecified</literal> (the default)
+          and <literal>path</literal>, which indicates that the option will
+          contain valid <emphasis>native</emphasis>, non-empty path name. An
+          option with category set to <literal>path</literal> can be used as
+          argument to tags like <xref linkend="tag.include"/>.
+        </para>
+        <para>
+          <varname>DESC</varname> is human-readable description of the option,
+          for use in comments.
+        </para>
+        <para>
+          <varname>VALUES</varname> is comma-separated list of all
+          possible values the option can have. It is used by backends that
+          don't support options (such as Visual C++ project files) to generate
+          all possible configurations. It's use is highly recommended.
+        </para>
+        <para>
+          <varname>VALUES_DESC</varname> is comma-separated list of
+          single-word description of corresponding values. It may be used
+          only if <varname>VALUES</varname> were specified and both
+          lists must have same length. These descriptions will show up
+          in formats that don't support conditions, such as Visual C++
+          projects (the project will contain several configurations that
+          will be described using these words).
+        </para>
+      </section>
+
+
+
+
+      
+      <!-- //////////////////      template         ////////////////// -->
+
+      
+      
+      <section id="cmd.template" xreflabel="template">
+        <title>template</title>
+        <para>
+          Defines new <link linkend="concept.template">template</link>.
+          <programlisting><![CDATA[
+<template id="NAME" [template="TEMPLATE,..."]>
+  SPECIFICATION
+</template>]]>
+  </programlisting>
+          Template definition is syntactically identical to
+          <link linkend="targets">target definition</link>.
+          <varname>template</varname> is optional comma-separated list of
+          templates this template derives from and
+          <varname>SPECIFICATION</varname> may contain the very same things that
+          target node.
+        </para>
+        <para>
+          Content of <function>template</function> node is
+          <emphasis>not</emphasis> processed by Bakefile when it is encountered
+          in makefile. It is stored in templates dictionary instead. When a
+          target that derives from the template is encountered, the template
+          is inserted before target's content.
+        </para>
+        <para>
+          For example consider this makefile fragment:
+          <programlisting><![CDATA[
+<template id="t1">
+  <define>NAME=$(id)</define>
+</template>
+<template id="t2">
+  <include>../headers</include>
+</template>
+
+<exe id="app" template="t1,t2">
+  <sources>hello.c</sources>
+</exe>
+]]></programlisting>
+          It looks like this after templates expansion:
+          <programlisting><![CDATA[
+<exe id="app" template="t1,t2">
+  <define>NAME=$(id)</define>
+  <include>../headers</include>
+  <sources>hello.c</sources>
+</exe>
+]]></programlisting>
+        </para>
+      </section>
+
+
+
+      
+      <!-- //////////////////      using          ////////////////// -->
+
+      
+      
+    <section id="cmd.using" xreflabel="using">
+      <title>using</title>
+      <para>
+        This commands is used to declare what modules the makefile requires.
+        See more about modules in <xref linkend="concept.modules"/>.
+              <programlisting><![CDATA[
+<using module="MODULE1[,MODULE2[,...]]"/>]]>
+  </programlisting>
+      </para>
+      <para>
+        The effect of <function>using</function> is as follows: the modules are
+        added to the list of used modules (unless they are already in it) and
+        additional ruleset files are loaded from
+        <link linkend="searchpaths">Bakefile search paths</link>. Name of every
+        file in every search path is decomposed into components by making every
+        subdirectory name a component and splitting the basename into components
+        by separating it on hyphens. A file is included as soon as all
+        components of its name appear in the list of used modules. The inclusion
+        behaves indentically to <xref linkend="cmd.include"/>.
+      </para>
+      <para>
+        Consider this structure of ruleset files:
+        <programlisting>
+python/common.bakefile        # python,common
+python/cxx.bakefile           # python,cxx
+cxx-common.bakefile           # cxx,common
+cxx-qt.bakefile               # cxx,qt
+qt/python.bakefile            # qt,python
+qt/cxx-python.bakefile        # qt,cxx,python</programlisting>
+        Anotated makefile fragment illustrates order of modules loading:
+        <programlisting><![CDATA[
+<using module="python"/>
+<!-- python/common.bakefile loaded -->
+
+<using module="cxx"/>
+<!-- cxx-common.bakefile loaded -->
+<!-- python/cxx.bakefile loaded -->
+
+<using module="qt"/>
+<!-- qt/python.bakefile loaded -->
+<!-- cxx-qt.bakefile loaded -->
+<!-- qt/cxx-python.bakefile loaded -->
+]]></programlisting>
+      </para>
+      <para>
+        (Note that module "common" and module named after the target format are
+        always used. Therefore ruleset files
+        <filename>common/MODULE.bakefile</filename> are always loaded if they exist.)
+      </para>
+      <para>
+        The command may be used repeatedly in the makefile or included files.
+        Repeating the <function>using</function> command with module that was
+        already added to the list of used modules with <function>using</function>
+        has no effect.
+      </para>
+      <variablelist>
+        <title>Parameters:</title>
+        <varlistentry>
+          <term>module</term>
+            <listitem>
+              <para>
+                Comma-separated list of modules to use.
+              </para>
+            </listitem>
+          </varlistentry>        
+        </variablelist>
+        <para>
+          In this example the makefile uses Gettext, Python and Pascal modules:
+          <programlisting><![CDATA[
+<using module="gettext,python"/>
+<using module="pascal"/>
+]]></programlisting>
+        </para>
+    </section>
+
+
+
+      
+      <!-- //////////////////      include          ////////////////// -->
+
+      
+      
+    <section id="cmd.include" xreflabel="include">
+      <title>include</title>
+      <para>
+        Includes Bakefile file. This is done by loading the file and
+        processing it immediately after <function>include</function> command
+        is encountered during parsing. The effect of using
+        <function>include</function> is identical to including content of the
+        file in place of the
+        <function>include</function> command.
+        <programlisting><![CDATA[
+<include file="FILENAME" [ignore_missing="0|1"] [once="0|1"]/>
+]]></programlisting>
+      </para>
+      <variablelist>
+        <title>Parameters:</title>
+        <varlistentry>
+          <term>file</term>
+            <listitem>
+              <para>
+                Name of the file to include. The filename may be either absolute
+                or relative. In the latter case, it is looked up relative to the
+                location of the makefile that contains the
+                <function>include</function> command and if that fails,
+                relative to standard Bakefile search paths.
+              </para>
+            </listitem>
+         </varlistentry>
+        <varlistentry>
+          <term>ignore_missing</term>
+            <listitem>
+              <para>
+                If set to 1, it is not an error if the file can't be found. If
+                0, Bakefile will abort with an error if it can't find the file.
+              </para>
+              <para role="default">
+                Default value: 0
+              </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>once</term>
+            <listitem>
+              <para>
+                If set to 1, then the file won't be included if it was already
+                included previously.
+              </para>
+              <para role="default">
+                Default value: 0
+              </para>
+            </listitem>
+         </varlistentry>
+      </variablelist>
+    </section>
+
+          
+
+      
+      <!-- //////////////////          if            ////////////////// -->
+
+      
+      
+      <section id="cmd.if" xreflabel="if">
+        <title>if</title>
+        <para>
+          Conditionally process part of the makefile.
+          <programlisting><![CDATA[
+<if cond="WEAKCONDITION">
+  ...statements...
+</if>
+]]></programlisting>
+          The condition must be
+          <link linkend="concept.conditions.weak">weak</link>. If it evaluates to
+          1 nodes under <function>if</function> node are processed as if they
+          were toplevel nodes. If it evaluates to 0, they are discarded.
+        </para>
+      </section>
+      
+      
+      
+      
+      <!-- //////////////////     fragment       ////////////////// -->
+
+      
+      <section id="cmd.fragment" xreflabel="fragment">
+        <title>fragment</title>
+        <para>
+          Inserts text into generated native makefile verbatim, so that it is
+          possible to include things not yet supported by Bakefile in the
+          makefiles. The text can be either read from a file or is taken from
+          command node's content. Variables are <emphasis>not</emphasis>
+          substituted in fragment's content, it is copied to the makefile 
+          as-is, with no changes.
+          <informaltable>
+            <tgroup cols='3'>
+              <thead>
+                <row>
+                  <entry>Parameter</entry>
+                  <entry>Description</entry>
+                  <entry>Required/Default value</entry>
+                </row>
+              </thead>
+              <tbody>
+                <row>
+                  <entry role="paramname">format</entry>
+                  <entry>
+                    Output format the fragment is for.
+                  </entry>
+                  <entry role="default">required</entry>
+                </row>
+                <row>
+                  <entry role="paramname">file</entry>
+                  <entry>
+                    Read the fragment from file.
+                  </entry>
+                  <entry role="default">no file, text is embedded</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </informaltable>
+        </para>
+      </section>
+
+      
+      
+      <!-- //////////////////     requires       ////////////////// -->
+
+      
+      <section id="cmd.requires" xreflabel="requires">
+        <title>requires</title>
+        <para>
+          Declares bakefile's requirements that the installed bakefile
+          version must meet to be able to correctly generate native makefiles
+          from it.
+          <informaltable>
+            <tgroup cols='3'>
+              <thead>
+                <row>
+                  <entry>Parameter</entry>
+                  <entry>Description</entry>
+                  <entry>Required/Default value</entry>
+                </row>
+              </thead>
+              <tbody>
+                <row>
+                  <entry role="paramname">version</entry>
+                  <entry>
+                    Minimal required version of Bakefile, e.g.
+                    <literal>0.1.1</literal>.
+                  </entry>
+                  <entry role="default">optional</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </informaltable>
+          Example:
+          <programlisting><![CDATA[
+<!-- refuse to run with Bakefile < 0.5.0,
+     it's missing feature foo: -->
+<requires version="0.5.0"/>
+]]></programlisting>
+        </para>
+      </section>
+
+
+
+      
+      <!-- //////////////////        error          ////////////////// -->
+
+      
+      
+      
+      <section id="cmd.error" xreflabel="error">
+          <title>error</title>
+          <para>
+              Reports error to output and exits. This command is useful for
+              adding sanity checks to bakefiles (both user bakefiles and
+              format definitions).
+              <programlisting><![CDATA[
+<!-- This code prevents creation of rules
+     for console mode apps: -->
+<define-tag name="app-type" rules="exe">
+  <if cond="value == 'console'">
+    <error>
+      Windows CE doesn't support console applications.
+      </error>
+  </if>
+</define-tag>]]>
+</programlisting>
+          </para>
+      </section>
+
+      
+      <!-- //////////////////        error          ////////////////// -->
+
+      
+      
+      
+      <section id="cmd.warning" xreflabel="warning">
+          <title>warning</title>
+          <para>
+              Reports warning to output and exits. This command is useful for
+              adding sanity checks to bakefiles (both user bakefiles and
+              format definitions).
+              <programlisting><![CDATA[
+<if cond="FORMAT=='msvc'">
+    <warning>msvc support is experimental</warning>
+</if>]]>
+</programlisting>
+          </para>
+      </section>
+
+
+
+      <!-- //////////////////        echo          ////////////////// -->
+
+
+
+
+      <section id="cmd.echo" xreflabel="echo">
+          <title>echo</title>
+          <para>
+            Prints the text in tag's value to output and,
+            unlike <xref linkend="cmd.error"/>,
+            continues processing. This command is useful for debugging
+            bakefiles (e.g. by printing variable values or adding progress
+            messages).
+          </para>
+          <para>
+            Note that if a variable is used in the text, it must evaluate to
+            a constant (i.e. <link linkend="concept.condvar">conditional
+            variables</link> or <link linkend="concept.option">options</link>
+            cannot be used).
+            <informaltable>
+              <tgroup cols='3'>
+                  <thead>
+                  <row>
+                      <entry>Parameter</entry>
+                      <entry>Description</entry>
+                      <entry>Default value</entry>
+                  </row>
+                  </thead>
+                  <tbody>
+                  <row>
+                      <entry role="paramname">level</entry>
+                      <entry>
+                        Can be <literal>verbose</literal> (in which case the
+                        message is printed only when <xref
+                        linkend='man.bakefile'/> is run with
+                      <literal>--verbose</literal> argument),
+                      <literal>debug</literal> (printed only when using the
+                      <literal>--debug</literal> flag) or
+                        <literal>normal</literal> (message is printed
+                        in any case to stdout).
+                      </entry>
+                      <entry role="default"><literal>normal</literal></entry>
+                  </row>
+                  </tbody>
+              </tgroup>
+            </informaltable>
+
+            Example:
+
+              <programlisting><![CDATA[
+<!-- Show the content of the variable X -->
+<set var="X">$(someComplexFunction())</set>
+<echo>The content of the X variable is: $(X)</echo>]]>
+</programlisting>
+          </para>
+      </section>
+
+
+
+
+
+      
+  
+  
+      
+  
+  
+  
+    </section>
+    
+    
+    <section id="sec.extending.bkl">
+      <title>Commands for Extending Bakefile</title>
+
+      
+      <!-- //////////////////     define-rule          ////////////////// -->
+
+      
+      <section id="cmd.define-rule" xreflabel="define-rule">
+        <title>define-rule</title>
+          <para>
+            Creates a new rule which can then be used as any other
+            <link linkend="rules">rule</link>. A rule consists of the template
+            (which is processed before target-specific code for all targets
+            created by this rule) and unlimited number of
+            <xref linkend="cmd.define-tag"/> statements that define tags
+            specific to this rule (and derived rules).
+          </para>
+          <para>
+            The usage of &lt;define-rule&gt; is as follows:
+              <programlisting><![CDATA[
+<define-rule name="NAME">
+  <template>
+    <!-- here goes the template for this rule -->
+  </template>
+
+  <define-tag name="TAG1">
+    ..
+  </define-tag>
+  <define-tag name="TAG2">
+    ..
+  </define-tag>
+  ...
+</define-rule>]]>
+</programlisting>
+          </para>
+          <para>
+            <informaltable>
+              <tgroup cols='3'>
+                  <thead>
+                  <row>
+                      <entry>Parameter</entry>
+                      <entry>Description</entry>
+                      <entry>Required/Default value</entry>
+                  </row>
+                  </thead>
+                  <tbody>
+                  <row>
+                      <entry role="paramname">name</entry>
+                      <entry>
+                        The name of the rule to create.
+                      </entry>
+                      <entry role="default">required</entry>
+                  </row>
+
+                  <row>
+                      <entry role="paramname">pseudo</entry>
+                      <entry>
+                        Allowed values are <literal>0</literal> and
+                        <literal>1</literal>; the value of  means that the
+                        rule is a 
+                        <link linkend="pseudotargets">pseudotarget</link>.
+                      </entry>
+                      <entry role="default">
+                        <literal>0</literal>
+                      </entry>
+                  </row>
+
+                  <row>
+                      <entry role="paramname">extends</entry>
+                      <entry>
+                        A comma-separed list of the rules which are
+                        <emphasis>extended</emphasis> by this rule. If
+                        rule B extends rule A, it means that all tags defined
+                        for A are also valid for B and the
+                        template of rule B automatically derives from the
+                        the template of rule A.
+                      </entry>
+                      <entry role="default"></entry>
+                  </row>
+
+                  </tbody>
+              </tgroup>
+            </informaltable>
+
+            Example:
+
+              <programlisting><![CDATA[
+<!-- Creates a new "copymo" rule with its own specialized
+     tags; example usage of this rule:
+
+        <copymo id="i18n">
+            <lang>en</lang>
+            <mo>myfile.mo</mo>
+        </copymo>
+-->
+<using module="datafiles"/>
+<define-rule name="copymo" extends="copy-files">
+    <template>
+        <srcdir>$(SRCDIR)/locale</srcdir>
+        <files>$(__mofiles)</files>
+        <dependency-of>all</dependency-of>
+    </template>
+    <define-tag name="lang">
+        <dstdir>$(DATADIR)/locale/$(value)/LC_MESSAGES</dstdir>
+    </define-tag>
+    <define-tag name="mo">
+        <set var="__mofiles">$(value)</set>
+    </define-tag>
+</define-rule>]]>
+</programlisting>
+          </para>
+      </section>
+          
+
+
+      
+      <!-- //////////////////     define-tag         ////////////////// -->
+
+      
+      <section id="cmd.define-tag" xreflabel="define-tag">
+        <title>define-tag</title>
+        <para>
+          Creates a new tag which can be used inside target definition or
+          rules templates.
+        </para>
+        <para>
+          This command can be used in two ways: either it's used inside of
+          <xref linkend="cmd.define-rule"/>, in which case it defines a new
+          tag for the current rule, or it's used in the global scope, in
+          which case it must have the <literal>rules</literal> attribute that
+          specifies which rules the tag applies to.
+        </para>
+        <para>
+          <informaltable>
+            <tgroup cols='3'>
+                <thead>
+                <row>
+                    <entry>Parameter</entry>
+                    <entry>Description</entry>
+                    <entry>Required/Default value</entry>
+                </row>
+                </thead>
+                <tbody>
+                <row>
+                    <entry role="paramname">name</entry>
+                    <entry>
+                      Name of the tag to define.
+                    </entry>
+                    <entry role="default">required</entry>
+                </row>
+
+                <row>
+                    <entry role="paramname">rules</entry>
+                    <entry>
+                      Comma-separed list of rules to which the tag
+                      applies.
+                    </entry>
+                    <entry role="default">
+                      required in global scope, implicit inside
+                      <xref linkend="cmd.define-rule"/>
+                    </entry>
+                </row>
+                </tbody>
+            </tgroup>
+          </informaltable>
+
+          Example:
+            <programlisting><![CDATA[
+<!--
+Create a new tag which adds include and lib paths for a "standard"
+library and can be used inside <exe> or <dll> tags; e.g.
+
+  <exe id="test">
+    <stdlib>lib1</stdlib>
+    <stdlib>lib2</stdlib>
+  </exe>
+-->
+<define-tag name="stdlib" rules="exe,dll">
+  <include>$(value)/include</include>
+  <lib-path>$(value)/lib</lib-path>
+</define-tag>
+]]></programlisting>
+        </para>
+      </section>
+
+
+      
+      <!-- //////////////////   define-global-tag      ////////////////// -->
+
+      
+      <section id="cmd.define-global-tag" xreflabel="define-global-tag">
+        <title>define-global-tag</title>
+        <para>
+          Like <xref linkend="cmd.define-tag"/>, but creates a tag that can
+          only be used in the global scope (i.e. alongside targets definitions
+          as opposed to inside them).
+        </para>
+        <para>
+          <informaltable>
+            <tgroup cols='3'>
+                <thead>
+                <row>
+                    <entry>Parameter</entry>
+                    <entry>Description</entry>
+                    <entry>Required/Default value</entry>
+                </row>
+                </thead>
+                <tbody>
+                <row>
+                    <entry role="paramname">name</entry>
+                    <entry>
+                      Name of the tag to define.
+                    </entry>
+                    <entry role="default">required</entry>
+                </row>
+                </tbody>
+            </tgroup>
+          </informaltable>
+
+          Example:
+
+            <programlisting><![CDATA[
+<!--
+Create a global tag which defines 3 variables with the same given
+prefix and with the same content; e.g.
+
+  <dummyset prefix="test">abc</dummyset>
+  <echo>$(test_first) $(test_second) $(test_third)</echo>
+
+will display "abc abc abc"
+-->
+<define-global-tag name="dummyset">
+  <set var="$(attributes['prefix'])_first">$(value)</set>
+  <set var="$(attributes['prefix'])_second">$(value)</set>
+  <set var="$(attributes['prefix'])_third">$(value)</set>
+</define-global-tag>
+]]></programlisting>
+<!-- FIXME: better (realistic) example! -->
+        </para>
+      </section>
+
+    
+      <!-- //////////////////     add-target         ////////////////// -->
+
+      
+      <section id="cmd.add-target" xreflabel="add-target">
+        <title>add-target</title>
+        <para>
+          Creates a target programmatically.
+        </para>
+        <para>
+          Using this command is equivalent to defining a target by using
+          the standard rules syntax, but it makes it possible to add a target
+          using dynamically determined rule. As such, it's only useful when
+          implementing other, higher-level rules.
+          This tag is hardly useful for normal uses of bakefile and is used
+          mostly as an internal utility.
+        </para>
+        <para>
+          This command can only be used inside rule definition, not in the
+          global scope.
+        </para>
+        <para>
+          <informaltable>
+            <tgroup cols='3'>
+                <thead>
+                <row>
+                    <entry>Parameter</entry>
+                    <entry>Description</entry>
+                    <entry>Required/Default value</entry>
+                </row>
+                </thead>
+                <tbody>
+                <row>
+                    <entry role="paramname">target</entry>
+                    <entry>
+                      ID of the target to create.
+                    </entry>
+                    <entry role="default">required</entry>
+                </row>
+
+                <row>
+                    <entry role="paramname">type</entry>
+                    <entry>
+                      The rule for the target.
+                    </entry>
+                    <entry role="default">required</entry>
+                </row>
+
+                <row>
+                    <entry role="paramname">cond</entry>
+                    <entry>
+                        The condition under which the target is built.
+                        In addition to regular condition syntax, two special
+                        forms are supported. If the condition is
+                        <literal>target</literal>, the condition of the target
+                        within which the <xref linkend="cmd.add-target"/> tag
+                        has been used (if any). If the condition has the form
+                        of <literal>target and
+                        </literal><varname>someOtherCondition</varname>, then
+                        target's condition as described above will be appended
+                        with <literal>and
+                        </literal><varname>someOtherCondition</varname>.
+                    </entry>
+                    <entry role="default"><literal>1</literal></entry>
+                </row>
+
+                </tbody>
+            </tgroup>
+          </informaltable>
+
+          Example:
+
+            <programlisting><![CDATA[
+<!--
+Creates a new EXE target 'myexe'; this is equivalent to
+  <exe id="myexe">
+    <sources>source1.c</sources>
+  </exe>
+-->
+<add-target target="myexe" type="exe">
+  <sources>source1.c</sources>
+</add-target>
+
+
+<!--
+Now define a <do_special_cmd> tag which creates a target with
+a name dynamically defined by the target from which the tag is used
+-->
+<define-tag name="do_special_cmd" rules="exe">
+  <add-target target="do_special_for_$(id)" type="action" cond="target"/>
+  <modify-target target="do_special_for_$(id)">
+    <command>special_command $(id)</command>
+  </modify-target>
+</define-tag>
+
+<exe id="myapp" cond="BUILD_MYAPP=='1'">
+  ...
+
+  <!-- the following tag will create a target 'do_special_for_myapp' which will
+       be executed only when BUILD_MYAPP=='1' -->
+  <do_special_cmd/>
+</exe>
+]]></programlisting>
+        </para>
+      </section>
+      
+      
+      
+      <!-- //////////////////     modify-target       ////////////////// -->
+
+      
+      <section id="cmd.modify-target" xreflabel="modify-target">
+        <title>modify-target</title>
+        <para>
+          Modifies an existing target by appending tags under this node to
+          its definition.
+        </para>
+        <para>
+          <informaltable>
+            <tgroup cols='3'>
+                <thead>
+                <row>
+                    <entry>Parameter</entry>
+                    <entry>Description</entry>
+                    <entry>Required/Default value</entry>
+                </row>
+                </thead>
+                <tbody>
+                <row>
+                    <entry role="paramname">target</entry>
+                    <entry>
+                      ID of the target to modify.
+                    </entry>
+                    <entry role="default">required</entry>
+                </row>
+                </tbody>
+            </tgroup>
+          </informaltable>
+
+          Example:
+
+            <programlisting><![CDATA[
+<!-- Modifies the global 'install' target to run an additional command -->
+<modify-target target="install">
+  <command>$(CP) myfile dest</command>
+</modify-target>
+]]></programlisting>
+        </para>
+      </section>
+
+      
+            
+      <!-- //////////////////       output       ////////////////// -->
+
+      
+      <section id="cmd.output" xreflabel="output">
+        <title>output</title>
+        <para>
+          Bakefile uses this command to specify what files a format produces.
+          Output is generated only as the result of
+          <function>output</function> command's presence in ruleset.
+          <informaltable>
+            <tgroup cols='3'>
+              <thead>
+                <row>
+                  <entry>Parameter</entry>
+                  <entry>Description</entry>
+                  <entry>Required/Default value</entry>
+                </row>
+              </thead>
+              <tbody>
+                <row>
+                  <entry role="paramname">file</entry>
+                  <entry>
+                    The file where output goes. Commontly used
+                    value is <literal>$(OUTPUT_FILE)</literal>.
+                  </entry>
+                  <entry role="default">required</entry>
+                </row>
+                <row>
+                  <entry role="paramname">writer</entry>
+                  <entry>
+                    Name of Empy template that is used to generated the
+                    output.
+                  </entry>
+                  <entry role="default">required</entry>
+                </row>
+                <row>
+                  <entry role="paramname">method</entry>
+                  <entry>
+                    <para>
+                      Method of combining generated output with existing
+                      content of the file. The default is
+                      <literal>replace</literal>, which overwrites the file.
+                    </para>
+                    <para>
+                      <literal>mergeBlocks</literal> divides both the old and
+                      the new file's content into blocks that begin with block
+                      signature like this:
+                      <programlisting>### beging block <emphasis>BLOCKNAME</emphasis> ###</programlisting>
+                      Blocks of the new content are copied over to the file,
+                      replacing old copies of the blocks, but blocks that are
+                      not present in new content are preserved. This can be used
+                      e.g. to merge configuration settings from several
+                      makefiles.
+                    </para>
+                    <para>
+                      <literal>mergeBlocksWithFilelist</literal> works
+                      similarly to <literal>mergeBlocks</literal>, but it
+                      includes list of input files that generated the block in
+                      the output and ensures that blocks that have no
+                      generator (e.g. because user's bakefiles changed and no
+                      longer cause some piece of code to be generated) are
+                      removed from the output. The list of files is added to
+                      block name like this:
+                      <programlisting>### beging block
+                      <emphasis>BLOCKNAME[file1.bkl,file2.bkl]</emphasis> ###</programlisting>
+                    </para>
+                    <para>
+                      <literal>insertBetweenMarkers</literal> takes first and
+                      last line of generated output, finds them in the output
+                      file (which must exist and must contain them) and
+                      inserts generated content between them.
+                    </para>
+                  </entry>
+                  <entry role="default">
+                    <literal>replace</literal>
+                  </entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </informaltable>
+        </para>
+      </section>
+
+
+      
+            
+    </section>
+        
+</chapter>

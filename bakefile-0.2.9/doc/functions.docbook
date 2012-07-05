@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!-- $Id: functions.docbook 1242 2008-08-10 00:04:15Z vaclavslavik $ -->
+
+<chapter id="ch.functions">
+  <title>Python functions</title>
+
+    <section id="sec.intro">
+        <title>Introduction</title>
+
+        <para>
+            In Bakefile, the expression inside <literal>$(...)</literal>
+            doesn't have to be a variable name, it can be
+            <emphasis>any</emphasis> Python expression. Expressions that
+            cannot be evaluated at runtime and are translated into output
+            format conditions are more limited, but as long as the expression
+            is evaluated only at Bakefile execution time, it can be any valid
+            Python expression.  In particular, any Python functions may be
+            called.
+        </para>
+
+        <para>
+            In order to make common tasks easier, Bakefile provides
+            miscellaneous utility functions which can
+            be used in your bakefiles. Unlike tags and
+            rules provided through <link linkend="ch.modules">modules</link>,
+            the functions documented in this section are available everywhere
+            in Bakefile.
+        </para>
+
+        <para>
+            Except where explicitely stated differently, all functions accept
+            as arguments Python strings.
+        </para>
+    </section>
+
+    <section id="sec.pyfn.howto">
+        <title>How to use a Python function in a bakefile</title>
+        <para>
+            Python instructions and thus also Python calls to functions, can
+            be used in bakefile wrapping them into the <literal>$( )</literal>
+            symbols.  E.g. suppose you want to use the
+            <xref linkend="pyfunc.fileList"/> function described below to
+            set variable <literal>A</literal>; you should then write:
+
+            <programlisting><![CDATA[
+<set var="A">
+    $(fileList('mypath/*.c'))
+</set>
+            ]]></programlisting>
+        </para>
+    </section>
+
+
+
+    <section id="sec.py.fn">
+        <title>Python functions</title>
+        <para>
+            The following Python functions are defined:
+        </para>
+        
+        <section id="pyfunc.envvar" xreflabel="envvar">
+            <title>envvar</title>
+            <synopsis>envvar(<parameter>"name"</parameter>)</synopsis>
+            <para>
+              Returns reference to environment variable
+              <varname>name</varname>. This function should be used instead
+              of <literal>$(DOLLAR)(name)</literal> idiom, because some output
+              formats (namely, Watcom makefiles) use different syntax for
+              referencing environment variables.
+            </para>
+        </section>
+
+        <section id="pyfunc.isconst" xreflabel="isconst">
+            <title>isconst</title>
+            <synopsis>isconst(<parameter>expr</parameter>)</synopsis>
+            <para>
+              Returns <literal>true</literal> if the
+              <emphasis>expression</emphasis> (i.e. not variable name as in
+              the case of <xref linkend="pyfunc.isdefined"/> etc.) given as
+              argument is constant expression.
+            </para>
+        </section>
+
+        <section id="pyfunc.isdefined" xreflabel="isdefined">
+            <title>isdefined</title>
+            <synopsis>isdefined(<parameter>name</parameter>)</synopsis>
+            <para>
+            Returns <literal>true</literal> if the given string is the name
+            of an option or a (conditional) variable previously defined in the bakefile.
+            </para>
+        </section>
+
+        <section id="pyfunc.isoption" xreflabel="isoption">
+            <title>isoption</title>
+            <synopsis>isoption(<parameter>name</parameter>)</synopsis>
+            <para>
+            Returns <literal>true</literal> if the given string is the name
+            of an option previously defined in the bakefile.
+            </para>
+        </section>
+
+        <section id="pyfunc.iscondvar" xreflabel="iscondvar">
+            <title>iscondvar</title>
+            <synopsis>iscondvar(<parameter>name</parameter>)</synopsis>
+            <para>
+            Returns <literal>true</literal> if the given string is the name
+            of a conditional variable previously defined in the bakefile.
+            </para>
+        </section>
+
+        <section id="pyfunc.ifthenelse" xreflabel="ifthenelse">
+            <title>ifthenelse</title>
+            <synopsis>ifthenelse(<parameter>cond</parameter>, <parameter>iftrue</parameter>, <parameter>iffalse</parameter>)</synopsis>
+            <para>
+            Allows to write if-then-else constructs inside bakefiles. The
+            arguments are respectively the <emphasis>if condition</emphasis>
+            (use Python syntax!), the Python expression to execute in case the
+            condition results true and the Python expression to execute in
+            case the condition results false.
+            </para>
+        </section>
+
+        <section id="pyfunc.ref" xreflabel="ref">
+            <title>ref</title>
+            <synopsis>ref(<parameter>var</parameter>, <parameter>target=None</parameter>)</synopsis>
+            <para>
+            Creates a reference to the given <parameter>var</parameter> variable
+            which will be evaluated only in the final stage of bakefile
+            processing.
+            </para>
+        </section>
+
+        <section id="pyfunc.isDeadTarget" xreflabel="isDeadTarget">
+            <title>isDeadTarget</title>
+            <synopsis>isDeadTarget(<parameter>target</parameter>)</synopsis>
+            <para>
+            Returns <emphasis>true</emphasis> if the given string is the name
+            of a conditional target whose condition is never met.
+            </para>
+        </section>
+
+        <section id="pyfunc.substituteFromDict" xreflabel="substituteFromDict">
+            <title>substituteFromDict</title>
+            <synopsis>substituteFromDict(<parameter>var</parameter>, <parameter>dict</parameter>, <parameter>desc=None</parameter>)</synopsis>
+            <para>
+            Returns the <emphasis>value</emphasis> of the dictionary entry
+            whose <emphasis>key</emphasis> matches the value of the variable
+            or option named <parameter>var</parameter>.
+            E.g.
+            <programlisting><![CDATA[
+<set var="A">
+    $(substituteFromDict(OPTION,{'1':'value1','0':'value0'}))
+</set>
+                ]]></programlisting>
+
+            sets <emphasis>A</emphasis> to <emphasis>value1</emphasis> if
+            <emphasis>OPTION</emphasis> is <emphasis>1</emphasis> or to
+            <emphasis>value2</emphasis> if <emphasis>OPTION</emphasis> is
+            <emphasis>0</emphasis>.
+            Note that Python requires curly brackets to define a dictionary.
+            </para>
+        </section>
+
+        <section id="pyfunc.nativePaths" xreflabel="nativePaths">
+            <title>nativePaths</title>
+            <synopsis>nativePaths(<parameter>filenames</parameter>)</synopsis>
+            <para>
+            Returns the given string with the <literal>/</literal> characters
+            substituted by the content of the <xref linkend="var.DIRSEP"/>
+            variable (see the Variables section).
+            </para>
+        </section>
+
+        <section id="pyfunc.addPrefixIfNotEmpty" xreflabel="addPrefixIfNotEmpty">
+            <title>addPrefixIfNotEmpty</title>
+            <synopsis>addPrefixIfNotEmpty(<parameter>prefix</parameter>, <parameter>value</parameter>)</synopsis>
+            <para>
+            Returns the <parameter>value</parameter> string prefixed with
+            <parameter>prefix</parameter>, unless <parameter>value</parameter> is
+            empty.
+            </para>
+        </section>
+
+        <section id="pyfunc.addPrefixToList" xreflabel="addPrefixToList">
+            <title>addPrefixToList</title>
+            <synopsis>addPrefixToList(<parameter>prefix</parameter>, <parameter>value</parameter>)</synopsis>
+            <para>
+            Adds <parameter>prefix</parameter> to every item in
+            <parameter>value</parameter> interpreted as whitespace-separated
+            list.
+            E.g.
+            <programlisting><![CDATA[
+<set var="A">
+    $(addPrefixToList('file','1.txt 2.txt 3.txt'))
+</set>
+                ]]></programlisting>
+            sets the <emphasis>A</emphasis> variable to <literal>file1.txt file2.txt file3.txt</literal>
+            </para>
+        </section>
+
+        <section id="pyfunc.safeSplit" xreflabel="safeSplit">
+            <title>safeSplit</title>
+            <synopsis>safeSplit(<parameter>str</parameter>)</synopsis>
+            <para>
+            Splits the given string like the built-in split() Python function
+            but, unlike the Python <literal>split()</literal> function,
+            recognizes that an expression like
+            <programlisting><![CDATA[
+"$(myPythonFuncCall(arg1, arg2)) item2"
+            ]]></programlisting>
+            must be split as
+            <programlisting><![CDATA[
+[ "$(myPythonFuncCall(arg1, arg2))", "item2" ]
+            ]]></programlisting>
+            and not as the built-in split() function would do
+            <programlisting><![CDATA[
+[ "$(myPythonFuncCall(arg1,", "arg2))", "item2" ]
+            ]]></programlisting>
+            </para>
+        </section>
+
+        <section id="pyfunc.fileList" xreflabel="fileList">
+            <title>fileList</title>
+            <synopsis>fileList(<parameter>path</parameter>)</synopsis>
+            <para>
+                Returns a string containing a space-separed list of all files
+                found in the given <parameter>path</parameter>.
+                <parameter>path</parameter> typically is a relative path
+                (absolute paths should be avoided in well-designed bakefiles)
+                with a mask used to match only wanted files.
+            </para>
+            <para>
+                When the given path is relative, it must be relative to the
+                <xref linkend="var.SRCDIR"/>
+                global variable; remember that <xref linkend="var.SRCDIR"/>
+                is in turn relative to
+                the location of the generated makefile
+                (see <xref linkend="var.OUTPUT_FILE"/>).
+            </para>
+            <para>
+                Additionally this function can accept Python lists of strings,
+                too.  The returned value is the list of all files found in all
+                the paths of the list.
+
+            E.g.
+            <programlisting><![CDATA[
+<sources>$(fileList('../src/*.cpp'))</sources>
+<sources>$(fileList(['../src/*.cpp', '../src/*.c']))</sources>
+                ]]></programlisting>
+            </para>
+        </section>
+
+        <section id="pyfunc.removeDuplicates" xreflabel="removeDuplicates">
+            <title>removeDuplicates</title>
+            <synopsis>removeDuplicates(<parameter>list</parameter>)</synopsis>
+            <para>
+                Returns a copy of the given (space-separed) list with all 
+                duplicate tokens removed.
+            </para>
+        </section>
+        
+    </section>
+</chapter>

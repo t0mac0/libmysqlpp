@@ -1,0 +1,130 @@
+'\" t
+.\"     Title: bakefile_gen
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 02/02/2011
+.\"    Manual: Running Bakefile
+.\"    Source: [FIXME: source]
+.\"  Language: English
+.\"
+.TH "BAKEFILE_GEN" "1" "02/02/2011" "[FIXME: source]" "Running Bakefile"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+bakefile_gen \- batch bakefile generation
+.SH "SYNOPSIS"
+.HP \w'\fBbakefile_gen\fR\ 'u
+\fBbakefile_gen\fR [\fB\-d\fR\fIDESCFILE\fR...] [\fB\-F\fR\fIFORMATS\fR...] [\fB\-D\fR\fIVAR\fR=\fIVALUE\fR...] [\fB\-I\fR\fIPATH\fR...] [\fB\-c\fR] [\fB\-\-list\-files\fR] [\fB\-j\fR] [\fB\-p\fR] [\fB\-\-dry\-run\fR] [\fB\-k\fR] [\fB\-n\fR] [\fB\-v\fR] [\fB\-V\fR]
+.SH "DESCRIPTION"
+.PP
+Calls
+\fBbakefile\fR
+with flags listed in description file (Bakefiles\&.bkgen
+or file specified using the \-\-desc option)\&.
+.SH "COMMAND LINE OPTIONS"
+.PP
+.PP
+\fB\-\-desc\fR=\fIDESCFILE\fR
+.RS 4
+Uses given description file instead of
+Bakefiles\&.bkgen\&.
+.RE
+.PP
+\fB\-\-formats\fR=\fIFORMATS\fR
+.RS 4
+Calls Bakefile to generate only makefiles for specified formats\&.
+\fIFORMATS\fR
+is comma\-separed list of format names\&. Formats not included in the list are ignored even if they are listed in <add\-formats> tags in the description file\&.
+.RE
+.PP
+\fB\-\-bakefiles\fR=\fIBAKEFILES\fR
+.RS 4
+Calls Bakefile to generate makefiles only from bakefiles that match any wildcard in comma\-separed list of wildcards in
+\fIBAKEFILES\fR\&. Input files specified using the <input> tag in the description file that don\*(Aqt match any of the wildcards are not processed\&.
+.RE
+.PP
+\fB\-D\fR\fIVAR\fR=\fIVALUE\fR
+.RS 4
+Pass variable definition to Bakefile, overriding any definition in description file or the input bakefile\&.
+.RE
+.PP
+\fB\-I\fR\fIPATH\fR
+.RS 4
+Add path to the list of directories where Bakefile looks for rules and output templates\&.
+.RE
+.PP
+\fB\-c\fR, \fB\-\-clean\fR
+.RS 4
+Removes all output files instead of generating them\&.
+.RE
+.PP
+\fB\-\-list\-files\fR
+.RS 4
+Prints the list of output files that would be generated instead of creating them\&. This command respects the constraints specified using the
+\fB\-\-format\fR
+and
+\fB\-\-bakefile\fR
+options\&. It can be used for example to create the list of all makefiles for given format\&.
+.RE
+.PP
+\fB\-j\fR, \fB\-\-jobs\fR
+.RS 4
+Number of jobs to run simultaneously\&. Default is the number of CPUs\&.
+.RE
+.PP
+\fB\-p\fR, \fB\-\-pretend\fR
+.RS 4
+Don\*(Aqt do anything, only display actions that would be performed\&.
+.RE
+.PP
+\fB\-\-dry\-run\fR
+.RS 4
+Process the bakefile normally, but instead of creating or modifying files, just print which files would be changed without actually modifying them\&.
+.RE
+.PP
+\fB\-k\fR, \fB\-\-keep\-going\fR
+.RS 4
+Do not stop when a target fails\&.
+.RE
+.PP
+\fB\-B\fR, \fB\-\-always\-make\fR
+.RS 4
+Pretend that all makefiles are out of date and regenerate all of them\&.
+\fB\-f\fR
+and
+\fB\-b\fR
+options are respected\&.
+.RE
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
+Display detailed information\&.
+.RE
+.PP
+\fB\-V\fR, \fB\-\-very\-verbose\fR
+.RS 4
+Display even more detailed information\&.
+.RE
+.PP
+\fB\-\-help\fR
+.RS 4
+Display usage information for
+\fBbakefile_gen\fR
+.RE

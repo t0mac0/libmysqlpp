@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!-- $Id: formats.docbook 1336 2010-02-07 13:58:32Z vaclavslavik $ -->
+
+<chapter id="ch.formats">
+  <title>Format specific documentation</title>
+  <para>
+    Depending on the format there are some additional steps required to
+    get extra functionality specific to this format.
+  </para>
+
+
+
+  <section id="format.msvs2005prj">
+    <title>MS VisualStudio 2005/2008 extended functionality</title>
+    <para>
+      The <literal>msvs2005prj</literal> and <literal>msvs2008prj</literal>
+      formats are capable of generating project files both for Win32 PC
+      platform and for embedded platform. By default, only Win32
+      configurations are generated, embedded configurations must be explicitly
+      enabled.
+    </para>
+    <para>
+      This is done by setting the
+      <link  linkend="var.MSVS_PLATFORMS"><varname>MSVS_PLATFORMS</varname></link>
+      variable to comma-separated list of platforms to use. Accepted platform
+      identifiers are:
+      <informaltable>
+        <tgroup cols='2'>
+          <thead>
+            <row>
+              <entry>Platform identifier</entry>
+              <entry>Visual Studio name</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry><literal>win32</literal></entry>
+              <entry>Win32</entry>
+            </row>
+            <row>
+              <entry><literal>win64</literal></entry>
+              <entry>x64</entry>
+            </row>
+            <row>
+              <entry><literal>pocketpc2003</literal></entry>
+              <entry>Pocket PC 2003 (ARMV4)</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+    </para>
+    <para>
+      The variable must be set before user bakefile file is processed, i.e.
+      it has to be done using command-line <literal>-D</literal> argument or
+      in the <filename>Bakefiles.bkgen</filename> file.
+    </para>
+    <para>
+      For example, the following command causes Bakefile to generate projects
+      for Pocket PC 2003: 
+    </para>
+    <para>
+      <prompt>$ </prompt>
+      <userinput>
+      bakefile -fmsvs2005prj -DMSVS_PLATFORMS=pocketpc2003 hello.bkl
+      </userinput>
+    </para>
+    <para>
+      And this generates hybrid project for both PocketPC and Win32 platforms:
+    </para>
+    <para>
+      <prompt>$ </prompt>
+      <userinput>
+      bakefile -fmsvs2005prj -DMSVS_PLATFORMS=win32,pocketpc2003 hello.bkl
+      </userinput>
+    </para>
+  </section>
+
+
+
+  <section id="format.watcom">
+
+    <title>Watcom format extended functionality</title>
+    <para>
+      Open Watcom compiler has possibility of crossplatform building for
+      many platforms. MS Windows binaries are the most common used output
+      of this compiler but it has also possibility of building for DOS,
+      OS/2 and other operating systems. Because of that by default watcom
+      makefiles are outputed with settings for building windows binaries.
+      This default setting can be changed by
+      <link linkend="bakefile.command.variable">defining</link> additional
+      <link linkend="platform">platform</link> variable.
+      <programlisting><![CDATA[
+# generate makefile.wat dedicated to windows development
+bakefile -f watcom file.bkl
+
+# generate makefile.wat dedicated to DOS development in extended 32-bit mode
+bakefile -f watcom -DPLATFORM_MSDOS=1 file.bkl
+
+# generate makefile.wat dedicated to OS/2 development
+bakefile -f watcom -DPLATFORM_OS2=1 file.bkl
+]]></programlisting>
+      <note>
+        <title>PLATFORM_MSDOS note</title>
+        <para>
+          Only 32-bit DOS mode with dedicated extender is supported. Generated
+          makefile contains additional <varname>DOS32</varname> variable which
+          points to desired extender. Expected values: <varname>X32VM</varname>,
+          <varname>X32</varname>, <varname>PMODEW</varname>,
+          <varname>CAUSEWAY</varname>, <varname>DOS32A</varname> and default
+          <varname>DOS4GW</varname> .
+        </para>
+      </note>
+    </para>
+
+  </section>
+  
+  
+  
+  <section id="wininstall">
+    <title>Install and uninstall support on Windows</title>
+    <para>
+      By default the <xref linkend="tag.install-to"/> and 
+      <xref linkend="tag.install-headers-to"/> tags won't have any effect
+      on Windows since the install and uninstall MAKE targets are not very
+      common there (unlike in the Unix world).
+    </para>
+    <para>
+      However you may find it useful to have (un)installation targets
+      under Windows as well. In this case you can enable this feature
+      by <link linkend="bakefile.command.variable">defining</link> the
+      <varname>FORMAT_HAS_MAKE_INSTALL</varname> variable and setting it to <literal>1</literal>:
+      <programlisting><![CDATA[
+# enable install and uninstall support also under Windows: 
+bakefile file.bkl -f msvc -DFORMAT_HAS_MAKE_INSTALL=1
+]]></programlisting>
+    </para>
+    <para>
+      When enabling the install/uninstall support for Windows, you should also
+      set the desired <varname>PREFIX</varname> and <varname>EXEC_PREFIX</varname> 
+      in your bakefile:
+      <programlisting><![CDATA[
+<set var="PREFIX">%MYPROJECTROOT%</set>
+<set var="EXEC_PREFIX">%MYPROJECTROOT%</set>
+]]></programlisting>
+    </para>
+  </section>
+  
+  
+</chapter>

@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<makefile>
+    
+    <using module="datafiles"/>
+    
+    <copy-files id="data">
+        <dependency-of>all</dependency-of>
+        <srcdir>$(SRCDIR)</srcdir>
+        <dstdir>$(BUILDDIR)</dstdir>
+        <files>datafiles.bkl</files>
+    </copy-files>
+
+    <!-- Test install/uninstall rules for files with a directory component -->
+    <data-files id="test">
+        <srcdir>$(SRCDIR)/..</srcdir>
+        <install-to>$(DATADIR)</install-to>
+        <files>datafiles/datafiles.bkl</files>
+    </data-files>
+
+    <!-- Same test preserving directory structure: -->
+    <data-files-tree id="test2">
+        <install-to>$(DATADIR)/dummyfolder</install-to>
+        <files>datafiles/datafiles.bkl</files>
+    </data-files-tree>
+
+</makefile>

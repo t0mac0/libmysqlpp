@@ -1,0 +1,398 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2003-2007 Vaclav Slavik
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: msvc_prj_common.bkl 1308 2009-04-27 21:00:40Z vaclavslavik $
+
+-->
+<makefile>
+    
+    <!-- code and settings shared by all msvc project file formats: -->
+
+    <include file="win32.bkl"/>
+
+    <set var="FORMAT_SUPPORTS_CONDITIONS">0</set>
+    <set var="FORMAT_SUPPORTS_ACTIONS">0</set>
+    <set var="FORMAT_SUPPORTS_SUBPROJECTS">0</set>
+     
+    <tag-info name="dirname"
+              position="before:libname,before:dllname,before:exename"/>
+    <tag-info name="debug-info"
+              position="after:dllname,after:libname,after:exename"/>
+
+    <define-rule name="_any">
+        <template>
+            <set var="_depname">$(id)</set>
+            <set var="_deps"/>
+            <set var="_dsp_deps"/> <!-- other dsp files we depend on -->
+            <set var="_targetdir"/>
+            <set var="_targetname">$(id)</set>
+        </template>
+        
+        <define-tag name="dirname">
+            <set var="_targetdir">$(nativePaths(value))$(DIRSEP)</set>
+        </define-tag>
+
+        <define-tag name="depends">
+            <set var="_deps" append="1">
+                $(substitute(value, lambda x: ifthenelse(isDeadTarget(x),'',ref('_depname', x)), 'DEP'))
+            </set>
+        </define-tag>
+        
+        <define-tag name="dependency-of">
+            <modify-target target="$(value)">
+                <depends>$(id)</depends>
+            </modify-target>
+        </define-tag>
+
+        <define-tag name="depends-on-dsp">
+            <set var="_dsp_deps" append="1">$(value)</set>
+        </define-tag>
+        
+        <define-tag name="depends-on-file">
+            <warning>
+                &lt;depends-on-file&gt; not implemented for this format
+            </warning>
+        </define-tag>
+        
+    </define-rule>
+
+    <define-rule name="_compiled" extends="_any">
+        <template template="_compiled_baset_projtype">
+            <set var="_kind">project</set>
+            <set var="_sources"/>
+            <set var="_more_files"/>
+            
+            <set var="_debug">0</set>            
+            <set var="_debug_edit_and_continue">0</set>            
+            
+            <set var="_builddir">
+                <if cond="BUILDDIR=='.'">$(_default_builddir)</if>
+                <if cond="BUILDDIR!='.'">$(nativePaths(BUILDDIR))</if>
+            </set>
+            <set var="_targetdir">$(_builddir)$(DIRSEP)</set>
+            
+            <set var="_pdbfile" eval="0">$(_targetdir)$(_name).pdb</set>
+            
+            <!-- precompiled headers support (see also msvc_common.bkl): -->
+            <set var="_pch_use_pch">0</set>
+            <set var="_pch_header"/>
+            <set var="_pch_generator"/>   <!-- if set generates pch -->
+            <set var="_pch_excluded"/> <!-- files that don't use it -->
+            <set var="_pch_file"/>
+
+            <!-- 
+            Support for custom build steps, needed for not-C/C++ files
+            compilation (not yet implemented) and misc. hacks.
+            _custom_build_files variable lists all source files that have
+            associated custom build with them. For every such file, there is
+            _custom_build_FILENAME variable with build commands (FILENAME
+            is file name with ./\- replaced with _):
+            -->
+            <set var="_custom_build_files"/>
+
+            <!-- Support for files grouping: -->
+            <set var="_file_groups"/>
+
+            <warnings>default</warnings>
+            <cxx-rtti>on</cxx-rtti>
+            <cxx-exceptions>on</cxx-exceptions>
+        </template>
+        
+        <define-tag name="objects-depend">
+            <depends>$(value)</depends>
+            <!-- FIXME: this is the best we can do, there's no concept of
+                        per-object dependencies in project files -->
+        </define-tag>
+        
+        <define-tag name="sources">
+            <set var="_sources" append="1">$(value)</set>
+        </define-tag>
+
+        <define-tag name="headers">
+            <msvc-project-files>$(value)</msvc-project-files>
+        </define-tag>
+
+        <define-tag name="win32-res">
+            <sources>$(value)</sources>
+        </define-tag>
+
+        <define-tag name="res-define"/>
+        <define-tag name="res-include"/>
+        
+        <define-tag name="_define-no-res"/>
+        <define-tag name="define">
+            <_define-no-res>$(value)</_define-no-res>
+            <res-define>$(value)</res-define>
+        </define-tag>
+        
+        <define-tag name="include">
+            <res-include>$(value)</res-include>
+        </define-tag>
+
+        <define-tag name="cppflags">
+            <set var="_cppflags" append="1">$(value)</set>
+        </define-tag>
+        <define-tag name="cflags">
+            <set var="_cppflags" append="1">$(value)</set>
+        </define-tag>
+        <define-tag name="cxxflags">
+            <set var="_cppflags" append="1">$(value)</set>
+        </define-tag>
+        
+        <define-tag name="sys-lib">
+            <set var="_ldlibs" append="1">
+                $(formatIfNotEmpty("%s.lib",value))
+            </set>
+        </define-tag>
+        
+        <define-tag name="ldflags">
+            <set var="_ldflags" append="1">$(value)</set>
+        </define-tag>
+        
+        <define-tag name="ldlibs">
+            <set var="_ldlibs" append="1">$(value)</set>
+        </define-tag>
+        
+        <define-tag name="library">
+            <depends>$(value)</depends>
+            <ldlibs>
+                $(substitute(value, lambda x: ref('_targetdir',x)+ref('_linkname', x), 'LIBR'))
+            </ldlibs>
+        </define-tag>
+        
+        <define-tag name="pic"/> <!-- win32 code is always PIC -->
+        
+        <define-tag name="debug-info">
+            <set var="_debug">
+                $(substituteFromDict(value, {'on':'1','off':'0'}))
+            </set>
+        </define-tag> 
+        
+        <define-tag name="debug-info-edit-and-continue">
+            <set var="_debug_edit_and_continue">
+                $(substituteFromDict(value, {'on':'1','off':'0'}))
+            </set>
+        </define-tag> 
+ 
+        <define-tag name="install-to"/>
+        <define-tag name="install-if"/>
+        
+        <define-tag name="msvc-project-files">
+            <set var="_more_files" append="1">$(value)</set>
+        </define-tag>
+        
+        <define-tag name="precomp-headers-gen">
+            <set var="_pch_generator">$(nativePaths(value))</set>
+        </define-tag>
+        <define-tag name="precomp-headers-exclude">
+            <set var="_pch_excluded" append="1">$(nativePaths(value))</set>
+        </define-tag>    
+        <define-tag name="precomp-headers">
+            <set var="_pch_use_pch"> 
+                $(substituteFromDict(value,{'on':'1', 'off':'0'}))
+            </set>
+        </define-tag>
+        <define-tag name="precomp-headers-location"/>
+        
+        <!-- Support for files grouping: -->
+        <define-tag name="msvc-file-group">
+            <set var="_file_groups">
+                $(_file_groups)$(LF)$(nativePaths(value))
+            </set>
+        </define-tag>
+
+    </define-rule>
+
+    <define-rule name="exe" extends="_compiled,_compiled_specific">
+        <template template="_exe_baset">
+            <app-type>console</app-type>
+            <exename>$(id)</exename>
+        </template>
+        <define-tag name="exename">
+            <set var="_name">$(value)</set>
+            <set var="_targetname">$(value)$(EXEEXT)</set>
+        </define-tag>
+        <define-tag name="app-type">
+            <set var="_type_code">
+                $(substituteFromDict(value,
+                {'console':_MSVC_TYPECODE_CONSOLE,
+                'gui':     _MSVC_TYPECODE_GUI}))
+            </set>
+            <set var="_type_nick">$(value)</set>
+         </define-tag>
+    </define-rule>
+    
+    <define-rule name="_dll" extends="_compiled,_compiled_specific">
+        <template template="_dll_baset_projtype">
+            <_define-no-res>_USRDLL</_define-no-res>
+            <_define-no-res>DLL_EXPORTS</_define-no-res>
+            <set var="_type_code">$(_MSVC_TYPECODE_DLL)</set>
+            <set var="_type_nick">dll</set>
+            <set var="_importlib"/> <!-- empty==no import lib -->
+
+            <dllname>$(id)</dllname>
+        </template>
+        <define-tag name="dllname">
+            <set var="_name">$(value)</set>
+            <set var="_targetname">$(value)$(DLLEXT)</set>
+        </define-tag>
+    </define-rule>
+    
+    <define-rule name="dll" extends="_dll">
+        <template>
+            <libname>$(id)</libname>
+        </template>
+        <define-tag name="libname">
+            <set var="_importlib">$(value).lib</set>
+            <set var="_linkname">$(_importlib)</set>
+        </define-tag>
+    </define-rule>
+    
+    <define-rule name="module" extends="_dll"/>
+    
+    <define-rule name="lib" extends="_compiled,_compiled_specific">
+        <template template="_lib_baset_projtype">
+            <_define-no-res>_LIB</_define-no-res>
+            <set var="_type_code">$(_MSVC_TYPECODE_LIB)</set>
+            <set var="_type_nick">lib</set>
+            <libname>$(id)</libname>
+        </template>
+        <define-tag name="libname">
+            <set var="_name">$(value)</set>
+            <set var="_targetname">$(value).lib</set>
+            <set var="_linkname">$(_targetname)</set>
+        </define-tag>
+    </define-rule>
+    
+    
+    <!-- phony targets are used only to track dependencies: -->
+    <define-rule name="phony" extends="_any">
+        <template>
+            <set var="_kind">phony</set>
+            <set var="_depname" eval="0">$(_deps)</set>
+        </template>
+    </define-rule>
+
+    <!-- some fake, never used targets: -->
+    <phony id="all" category="all"/>
+    <phony id="clean"/>
+
+    <!-- 
+    action rules - they are transformed into special target with
+    nmake content:  FIXME FIXME FIXME
+    -->
+    <define-rule name="action" extends="_any">
+        <template>
+            <set var="_kind">action</set>
+        </template>
+        <define-tag name="command">
+            <warning>
+                Arbitrary commands are not implemented for project files.
+            </warning>
+        </define-tag>
+        <define-tag name="is-phony">
+        </define-tag>
+    </define-rule>
+
+    <define-rule name="subproject" extends="_any">
+        <template>
+            <set var="_kind">phony</set>
+        </template>
+        <define-tag name="installable"/>
+        <define-tag name="dir"/>
+        <define-tag name="target"/>
+    </define-rule>
+
+    <define-tag name="version" rules="dll"/>
+    <define-tag name="so_version" rules="dll"/>
+    <define-tag name="mac_version" rules="dll"/>
+    <define-tag name="mac-res" rules="exe"/>
+    <define-tag name="symbian-res" rules="exe"/>
+
+
+    <!-- ======= FIXME: temporary measure: before all makefiles are converted
+                 from using __ to using _ prefix, we need version of
+                 msvc_common.bkl that uses _, included here -->
+    <!-- <include file="msvc_common.bkl"/> -->
+
+
+    <!-- some nontrivial settings shared by all msvc formats: -->
+
+    <define-tag name="debug-info" rules="exe,dll,module,lib">
+        <debug-runtime-libs>$(value)</debug-runtime-libs>
+    </define-tag>
+    
+    <if cond="FORMAT!='msevc4prj'">
+        <define-tag name="app-type" rules="exe">
+            <define>
+                $(substituteFromDict(value,
+                {'console':'_CONSOLE', 'gui':'_WINDOWS'}))
+            </define>
+        </define-tag>
+    </if>
+
+
+    <!-- precompiled headers: -->
+    <!-- (more things in makefile_defs_msvc.bkl, msvc6prj.bkl,
+          msvc_prj_*_common.bkl) -->
+    
+    <define-tag name="precomp-headers-header" rules="exe,dll,module,lib">
+        <set var="_pch_header">$(value)</set>
+    </define-tag>
+
+    
+    <!-- =============================================================== -->
+    <!--                   Compiler-specific tags:                       -->
+    <!-- =============================================================== -->
+    
+    <define-tag name="cppflags-msvc" rules="exe,lib,dll,module">
+        <cppflags>$(value)</cppflags>
+    </define-tag>
+    <define-tag name="cflags-msvc" rules="exe,lib,dll,module">
+        <cflags>$(value)</cflags>
+    </define-tag>
+    <define-tag name="cxxflags-msvc" rules="exe,lib,dll,module">
+        <cxxflags>$(value)</cxxflags>
+    </define-tag>
+    <define-tag name="ldflags-msvc" rules="exe,dll,module">
+        <ldflags>$(value)</ldflags>
+    </define-tag>
+
+
+    <!-- ================ end of included msvc_common.bkl copy ========= -->
+    
+
+    
+    <!-- =============================================================== -->
+    <!--                            output:                              -->
+    <!-- =============================================================== -->
+
+    <!-- ugly hacks to customize the output: -->
+
+    <!-- for merging otherwise identical dll and lib targets
+    syntax is whitespace separated list of target=target1+target2 -->
+    <set var="MSVC6PRJ_MERGED_TARGETS"/>
+
+</makefile>

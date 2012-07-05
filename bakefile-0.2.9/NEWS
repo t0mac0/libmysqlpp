@@ -1,0 +1,342 @@
+
+Version 0.2.9
+-------------
+
+- added -I flag to bakefile_gen too
+- msevc4prj: fixed breakage of <debug-info> introduced in 0.2.7
+- added suncc backend
+- msvs2005prj, msvs2008prj: added support for x64 builds
+- msvs2008prj: fixed compatibility with VS 2010 (Stefan Csomor)
+
+
+Version 0.2.8
+-------------
+
+- msvc: fixed incorrect compiler flags for debug info without debug runtime
+
+
+Version 0.2.7
+-------------
+
+- added getTagAttrib() helper (#97)
+- fixed shared library names and sonames on Solaris to use only one version
+  number: use libfoo.so.1 for the file and the soname and libfoo.so for the
+  only symlink
+- msvs2008prj: fixed MIDL compiler settings
+- autoconf, gnu: fixed pkgconfig module to respect DESTDIR (#248)
+- msvs*prj, msvc, msvc6prj: using debug info without debug runtime was fixed
+  to keep all optimizations enabled (#212)
+- added support fo running on Mac OS X Snow Leopard
+
+
+Version 0.2.6
+-------------
+
+- autoconf: fixed dependencies support for traditional Unix compilers
+- autoconf: correct shared library extension under HP-UX ia64
+- autoconf: added support for new (10 and 11) Intel C/C++ compiler versions
+- watcom: fixes for OpenWatcom 1.8 (Jiri Malak, #238)
+- fixed assert failure with wxWidgets' presets (#230)
+- msvs*prj: pass preprocessor flags to IDL compiler (#240)
+- msvs*prj: define WIN32 preprocessor symbol
+- fixed 100% CPU usage in bakefile_gen
+- added <debug-info-edit-and-continue> tag to support Visual Studio
+  debugger's Edit and Continue feature
+- msvs*prj: allow overriding names of .vcproj files using MSVS_PROJECT_FILE
+  variable (#224)
+
+
+Version 0.2.5
+-------------
+
+- msvs2003prj, msvs2005prj: fixed PCH handling broken in 0.2.4
+- mingw: fixed C compiler invocation broken in 0.2.4 (#231)
+
+
+Version 0.2.4
+--------------
+
+- msvs200xprj: if "-o foo.vcproj" is specified on the command line, only
+  generate foo.vcproj and not foo.sln (#174)
+- autoconf: fixes for non-default BUILDDIR
+- msvs2005prj: fixed _WIN32_WCE define for PocketPC 2003 platform (#187)
+- put user- or configure-provided LDFLAGS and LIBS to the end of linker
+  command line to avoid conflicts of local libraries with system-wide (#182)
+- xcode2: fixed <ldflags> to not delete previously specified flags (#192)
+- xcode2: fixed <cxxflags> and <cppflags> for C++ files (Scott Bailey, #194)
+- xcode2: fixed <library> handling (Scott Bailey, #199)
+- added <depends-on-file> to all formats, with warnings if it's not
+  implemented (#190)
+- mingw, gnu: avoid "No rule to make target ..." errors in generated makefiles
+  when dependency header is removed (#201)
+- msvs2003prj, msvs2005prj: don't use /RTC1 flag in release builds with debug
+  information enabled (#202)
+- msvs2003prj, msvs2005prj: enable functions inlining iff optimization is
+  enabled instead of doing it unconditionally (#205)
+- xcode2: added support for <headers> (Scott Bailey, #208)
+- msvs2003prj, msvs2005prj: improvements to make generated projects more
+  similar to natively created projects (#210)
+- fixes for running on Solaris (#214)
+- xcode2: fixed naming of <dll> targets (Scott Bailey, #218)
+- check for incorrect used of conditional <set> (#220)
+- added support for multiple source files with the same name (#92)
+- msvs2003prj, msvs2005prj: fixed to generate correct precompiled headers
+  setting for auto vs. manual PCH creation
+- fixed incorrect dependencies of the "install" target (#225)
+- added support for Visual Studio 2008 (#186)
+- bakefile_gen --clean removes directories created by Bakefile (#171)
+- fixed <subproject>'s <target> tag to work with all formats
+  (Francesco Montorsi #226)
+
+
+Version 0.2.3
+--------------
+
+- removed support for C++ Builder X, it no longer exists and the format
+  wasn't used by anyone in practice
+- significantly improved Xcode format (Kevin Ollivier)
+- fixed running bakefile_gen if the name of temporary directory contains spaces
+- msvc6prj: use /pdb linker option to make the projects work when imported
+  in MSVC7.1 (Scott Bailey, patch #1732354)
+- msvs2005prj: added support for Pocket PC platform
+- added support for MSVS2003 project files (based on patch by
+  Aleksander Jaromin)
+- Bakefile now generates files with output format's platform's default
+  line endings; added --eol option to override this (based on patch by
+  Francesco Montorsi)
+- added envvar() convenience function for referencing environment variables
+- added --wrap-output command line option for tweaking line-wrapping
+  behavior (based on patch by Francesco Montorsi)
+- bakefile_gen uses all available CPUs by default now; use explicit -j1
+  flag to get the old behavior
+- autoconf: fixed shared libraries sonames on NetBSD and OpenBSD
+- added limited support for conditional variables dependent on other
+  conditional variables based by Francesco Montorsi (previously, only
+  dependency on options was possible)
+- added "debug" level to the <echo> command
+- deprecated <echo level="warning"> in favor of new <warning> command
+- added XML Schema for FORMATS.bkmanifest and Bakefiles.bkgen files
+- autoconf: check if install -d works (patch by Warren Young)
+- dmars: always use -HP99 switch; made the value configurable (#160)
+- autoconf: fixed warning about datarootdir variable with autoconf-2.61+
+- fixed <lib-path> to generated correct output when passed empty string
+  as argument (#170; based on patch by Scott Bailey)
+- msvs2005prj: fixed handling of include and library paths with spaces
+- msvc6prj: fixed to not use minimal rebuild with optimization (#42)
+- autoconf: call AC_BAKEFILE_PROG_CC/CXX from AC_BAKEFILE (#64)
+- autoconf: added pkgconfig module (Francesco Montorsi, #105)
+- added preliminary support for generating multiple variants
+  of makefiles in the same format (#156)
+- msvs2005prj: fixed to correctly exclude conditional targets from
+  configurations they aren't built in (#181, John Ralls)
+- msvs2005prj: fixed runtime library selection
+- SRCDIR variable now uses Unix and not native paths like other variables
+- fixes to win32 install target support (Francesco Montorsi)
+- mingw: ensure win32 shell is used even if sh.exe is on PATH
+
+
+Version 0.2.2
+--------------
+
+- Bakefile is now licensed under the MIT license
+- Python >= 2.3 is now required to run Bakefile
+- added --touch option to bakefile
+- fixed isdefined() to work with conditional variables (Francesco Montorsi)
+- added --dry-run option to bakefile_gen too
+- added optional support for (un)installation targets in Windows
+  formats (Francesco Montorsi)
+- added FORMAT_SUPPORTS_{ACTIONS,SUBPROJECTS} (Francesco Montorsi)
+- added initial support for MSVS2005 project files (based on heavily
+  modified patch by Kevin Powell, Steven Van Ingelgem and Kevin Ollivier)
+- autoconf: fixed <set-srcdir> to generate correct code when ran on Windows
+- don't fail in bakefile_gen --clean if a new file or format was added
+  since .bakefile_gen.state was last updated
+- gnu, mingw: assign default options values using ':=' instead of '='
+- added force argument to <option>'s <default-value> to make bypassing
+  of the default value check possible (Francesco Montorsi)
+
+
+Version 0.2.1
+--------------
+
+- better error messages in some cases (Francesco Montorsi)
+- show detailed backtraces on errors
+- added --always-make option to bakefile_gen (Francesco Montorsi)
+- added bakefile_gen manpage (Francesco Montorsi)
+- autoconf: fixed make distclean for <subproject> targets
+- more improvements to the documentation (Warren Young)
+- autoconf: respect the LIBS variable (Francesco Montorsi)
+- added "once" property to <include> command (Francesco Montorsi)
+- implemented uninstall target (Francesco Montorsi)
+- added <headers> tag to targets; <headers> rule was removed from
+  the 'datafiles' module and any code using it needs to be upgraded to
+  use per-target <headers> tag (Francesco Montorsi)
+- msvc6prj: fixed _custom_build_files to work with filenames
+  containing '-' (Dmitry Kononov)
+- msvc*: respect DLLEXT and EXEEXT variables (Dmitry Kononov)
+- added bash completion script
+- gnu: support DESTDIR variable
+- added <define-global-tag> which can be used to define tags with global
+  scope; this makes it easy to define new toplevel commands (based on patch
+  by Francesco Montorsi)
+- added <set-srcdir> for setting SRCDIR variable; it cannot be done manually
+  anymore (Francesco Montorsi)
+- fixed dependencies handling in bakefile_gen if fileList() is used
+- autoconf: compatible with autoconf-2.60
+- autoconf: fixed creation of static libraries when using the SunCC
+  compiler (Michael Wetherell)
+- added Mac OS X package (Kevin Ollivier)
+- added --dry-run option to bakefile and --list-files to bakefile_gen
+- correctly evaluate per-target variables in <echo> and <error>
+
+
+Version 0.2.0
+--------------
+
+- watcom: more platforms (OS/2, DOS) support
+- autoconf: support IBM xlC compiler on Mac OS X
+- autoconf: dependencies support for DEC/Compaq/HP cxx compiler (Vadim Zeitlin)
+- autoconf: dependencies support for HP aCC compiler (Vadim Zeitlin)
+- autoconf: dependencies support for SGI MIPSpro compiler (Vadim Zeitlin)
+- autoconf: fixed shared libraries with gcc under AIX 5 (Vadim Zeitlin)
+- autoconf: added support for Intel C/C++ compiler (Vadim Zeitlin)
+  and its precompiled headers (based on Mattia Barbon's patch)
+- win32 makefiles: fixed cleaning list of files (Francesco Montorsi)
+- many improvements to the documentation (Warren Young)
+- support for conditional installation of <subproject> targets
+  (Francesco Montorsi)
+- added fileList() function (loosely based on Francesco Montorsi's patch)
+- dmars: don't pass pch file to resource compiler
+- autoconf: added --disable-dependency-tracking
+- added <echo> command (Francesco Montorsi)
+
+
+Version 0.1.9.1
+---------------
+
+- msvc6prj: fixed handling of MSVC6PRJ_MERGED_TARGETS hack
+
+
+Version 0.1.9
+-------------
+
+- dmars: fixed precompiled headers to not recompile everything
+- mingw: added dependency tracking
+- dmars: fixed subprojects
+- don't escape \ in Python expressions
+- fixed copy-files on Solaris (Michael Wetherell)
+- added dependencies tracking for Sun CC (Michael Wetherell)
+- msvc: fixed to work with free MS tools (Włodzimierz Skiba)
+- new format (unfinished!): xcode2 for Xcode project files (David Elliott)
+- new format: symbian for Symbian tools (Włodzimierz Skiba)
+- msevc4prj: support C++ exceptions
+- autoconf: treat Cygwin as Unix (Michael Wetherell)
+- added --keep-going option to bakefile_gen
+
+
+Version 0.1.8
+-------------
+
+- gnu: define PLATFORM_UNIX
+- gnu: implemented dependencies tracking
+- msvc*: use /EHsc instead of /GX, which is deprecated in VC8 (Vadim Zeitlin)
+- added scripts for making Debian package (Vadim Zeitlin)
+- gnu: fixed <module> targets to not have "lib" prefix in name
+- added --quiet option
+- gnu,mingw: fixed <threading>multi</threading> to use -pthread or -mthreads
+  for compilation and not only linking
+
+
+Version 0.1.7
+-------------
+
+- fixed running under Python 2.2 (Francesco Montorsi)
+- fixed handling of "prepend" attribute on <set> command
+
+
+Version 0.1.6
+-------------
+
+- autoconf: MetroWerks compiler support (David Elliott)
+- fixed 'fake' preset to define <precomp-headers-location>
+- workaround for a bug in aclocal that causes it to die when processing
+  AC_BAKEFILE definition in bakefile.m4
+
+
+Version 0.1.5
+-------------
+
+- new format: dmars_smake for DigitalMars's smake (Włodzimierz Skiba)
+- msvc6prj, msevc4prj: change project names to be same as file names
+- portability fix for datafiles module (Greg Noel)
+- watcom: support <cxx-rtti> (Hans Van Leemputten)
+- added <fragment> support to all makefile-based formats
+- added category=path hint to options to make it possible to use options
+  as argument to <include> etc.
+- new format: gnu for GNU toolchain on Unix
+- misc portability fixes on Unix (Michael Champigny)
+- added BeOS support (thanks to information by Michael Champigny)
+- improved performance when generating lots of makefiles using
+  bakefile_gen by caching parsed XML files
+- autoconf: fixed precompiled headers dependencies in case of multiple targets
+- precompiled headers support for dmars and dmars_smake formats
+  (based on work by Włodzimierz Skiba)
+- autoconf: BSD make fixes in the format
+- msvc6prj: fixed dependencies in project files
+- msvc6prj: <optimize>speed optimized for size and vice versa, fixed
+- fixed win32 formats' "make clean" to delete precompiled headers files
+- autoconf: fixed to not accumulate outdated content in autoconf_inc.m4
+- msvc6prj, msevc4prj: don't ignore source files with unrecognized extension
+- autoconf: fixed inclusion of autoconf_inc.m4 so that autoconf is aware of
+  changes made to the included file and regenerates configure even if
+  configure.in didn't change
+
+
+Version 0.1.4
+-------------
+
+- windows makefiles: fixed "clean" target to clean subprojects
+- added <exename> tag
+- changes to bakefile flags in Bakefiles.bkgen are now considered when
+  determining whether a makefile is out of date
+- borland: fixed subdirs handling for directories that begin with ..
+  (idea by Hans Van Leemputten)
+- autoconf: OS/2 fixes (Stefan Neis)
+- added <pic> for enabling position-independent code for static libraries
+- autoconf: added bakefilize tool to make packaging easier
+- added <error> command for sanity checking in .bkl files
+- new backend for eMbedded Visual C++ 4 project files
+- added --pretend option to bakefile_gen tool
+- added -D option to bakefile_gen that lets the user further customize
+  the output by defining additional variables
+
+
+Version 0.1.3
+-------------
+
+- use mkstemp() to create temporary files if available
+- lock output files so that it is possible to run multiple instances of
+  bakefile on same tree
+- added -j flag to bakefile_gen for simultaneous execution of more bakefile
+  instances on multiprocessor systems
+- msvc6prj: don't output external dependencies as first projects in workspace
+- added <res-define> and <res-include> tags to specify flags for resource
+  compilers but not C/C++ compilers
+
+
+Version 0.1.2
+-------------
+
+- fixed bakefile_gen if Bakefile was installed in directory containing
+  space in its name
+- fixed configure on Mac OS X
+- variables and targets are no longer alphabetically sorted in generated
+  makefiles, the order of their declaration in bakefiles is now preserved
+  (this fixes the bug when output generated using Python 2.2 was different
+  from output if using Python 2.3)
+
+
+Version 0.1.1
+-------------
+
+- first public release

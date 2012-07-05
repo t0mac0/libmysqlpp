@@ -1,0 +1,57 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2003-2007 Vaclav Slavik
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: makefile_defs_dmars.bkl 1020 2007-03-05 13:52:29Z vaclavslavik $
+
+-->
+<makefile>
+    
+    <include file="makefile_defs_dmars_common.bkl"/>
+    
+    <template id="__subproject_templ">
+        <set var="__MAKE_SUBPROJECT_BATFILE">
+            $(mkPathPrefix(BUILDDIR))$(id).bat
+        </set>
+        <set var="__MAKE_SUBPROJECT_TEMPLATE" eval="0">
+            @echo cd $(__subdir) &gt;$(__MAKE_SUBPROJECT_BATFILE)
+            @echo make -f $(os.path.basename(OUTPUT_FILE)) $(MAKEARGS) @@@ &gt;&gt;$(__MAKE_SUBPROJECT_BATFILE)
+            $(__MAKE_SUBPROJECT_BATFILE)
+            @del $(__MAKE_SUBPROJECT_BATFILE)
+        </set>
+        <set var="__MAKE_SUBPROJECT_CMD" eval="0">
+            $(__MAKE_SUBPROJECT_TEMPLATE.replace('@@@',__subtarget))
+        </set>
+        <set var="__INSTALL_SUBPROJECT_CMD">
+            $(__MAKE_SUBPROJECT_TEMPLATE.replace('@@@','install'))
+        </set>
+        <set var="__UNINSTALL_SUBPROJECT_CMD">
+            $(__MAKE_SUBPROJECT_TEMPLATE.replace('@@@','uninstall'))
+        </set>
+        <set var="__CLEAN_SUBPROJECT_CMD">
+            $(__MAKE_SUBPROJECT_TEMPLATE.replace('@@@','clean'))
+        </set>
+    </template>
+
+</makefile>

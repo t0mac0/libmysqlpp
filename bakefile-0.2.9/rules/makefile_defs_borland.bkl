@@ -1,0 +1,274 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2003-2008 Vaclav Slavik
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: makefile_defs_borland.bkl 1190 2008-01-28 10:09:13Z vaclavslavik $
+
+-->
+<makefile>
+    
+    <include file="win32.bkl"/>
+
+    <set var="__DEFINE_ARG">-D</set>
+    <set var="__INCLUDE_ARG">-I</set>
+    <set var="__LIB_ARG">%s.lib</set>
+    <set var="__LIBDIR_ARG">-L</set>
+
+    <set var="__DEFAULT_CC">bcc32</set>
+    <set var="__DEFAULT_CXX">bcc32</set>
+    <set var="__DEFAULT_CFLAGS"></set>
+    <!-- 
+            -a4: align to 32bit 
+            -g0: don't treat lots of warnings as error
+    -->
+    <set var="__DEFAULT_CPPFLAGS">-a8 -g0</set>
+    <set var="__DEFAULT_CXXFLAGS"></set>
+    <set var="__DEFAULT_LDFLAGS"></set>
+    
+    <set var="__LINKER_CC" eval="0">ilink32 -Tpe -q</set>
+    <set var="__LINKER_CXX" eval="0">ilink32 -Tpe -q</set>
+    <set var="__DLL_LINKER_CC" eval="0">ilink32 -Tpd -q</set>
+    <set var="__DLL_LINKER_CXX" eval="0">ilink32 -Tpd -q</set>
+    <set var="__MODULE_LINKER_CC">$(__DLL_LINKER_CC)</set>
+    <set var="__MODULE_LINKER_CXX">$(__DLL_LINKER_CXX)</set>
+
+    <!-- basic compiler/linker flags: -->
+    <set var="__FLAG_EXE_CONSOLE" eval="0">-ap</set> <!-- -tC -->
+    <set var="__FLAG_EXE_GUI" eval="0">-aa</set> <!-- -tW -->
+    <set var="__FLAG_DEBUG_ON">-v</set>
+    <set var="__FLAG_DEBUG_ON_LINKER">-v</set>
+    <set var="__FLAG_DEBUG_OFF">-v-</set>
+    <set var="__FLAG_DEBUG_OFF_LINKER">-v-</set>
+    <set var="__FLAG_OPTIMIZE_OFF">-Od</set>
+    <set var="__FLAG_OPTIMIZE_SIZE">-O1</set>
+    <set var="__FLAG_OPTIMIZE_SPEED">-O2</set>
+    <set var="__FLAG_ARCH_I386">-3</set>
+    <set var="__FLAG_ARCH_I486">-4</set>
+    <set var="__FLAG_ARCH_I586">-5</set>
+    <set var="__FLAG_ARCH_I686">-6</set>
+    <set var="__FLAG_SINGLE_THREADING_LD"/>
+    <set var="__FLAG_MULTI_THREADING_LD"/>
+    <set var="__FLAG_SINGLE_THREADING_CPP"/>
+    <set var="__FLAG_MULTI_THREADING_CPP"/>
+    <set var="__FLAG_WARNINGS_NO"/>
+    <set var="__FLAG_WARNINGS_DEFAULT"/>
+    <set var="__FLAG_WARNINGS_MAX"/>
+    
+    <set var="__FLAG_RTTI_ON"></set>
+    <set var="__FLAG_RTTI_OFF"></set>
+    <set var="__FLAG_EXCEPTIONS_ON"></set>    
+    <set var="__FLAG_EXCEPTIONS_OFF"></set>
+    
+    <set var="__MAKEARGS" eval="0">
+        $(' '.join(['-D%s="$(%s)"' % (x,x) for x in OPTIONS.split()]))
+    </set>
+    <set var="MAKEARGS" make_var="1">$(__MAKEARGS)</set>
+    
+    <!-- -tWR sets -tW as well, so it must be before -tC !! -->
+    <tag-info name="runtime-libs" position="before:app-type"/>
+
+    <!-- rules building blocks: -->
+    
+    <template id="__commands_templ_C">
+        <set var="__COMPILE_C_CMD" eval="0">
+            $(CC) -q -c -P- -o$@ $(__cflags) $(src)
+        </set>
+        <!-- FIXME: temporary hack, $(src) should be used only if there are
+                    object-dependencies, otherwise $** should be used -->
+    </template>
+    
+    <template id="__commands_templ_CXX">
+        <set var="__COMPILE_CXX_CMD" eval="0">
+            $(CXX) -q -c -P -o$@ $(__cxxflags) $(src)
+        </set>
+        <!-- FIXME: temporary hack, $(src) should be used only if there are
+                    object-dependencies, otherwise $** should be used -->
+    </template>
+
+    <!--
+    NB: We deal with the ilink32 mess here. We can't use simple linking
+        because it doesn't allow us to embed resources. ilink32 requires
+        that both startup object file and C RTL are specified explicitly,
+        and we must come with correct names.
+
+        Borland's startup objects are:
+          c0d32.obj         windowed app DLL
+          c0d32w.obj        DLL, wide char support
+          c0d32x.obj        console DLL
+          c0w32.obj         GUI app
+          c0w32w.obj        GUI app, wide char support
+          c0x32.obj         console app
+          c0x32w.obj        console app, wide char support
+
+        C runtime libs are:
+          cw32.lib          static
+          cw32i.lib         dynamic (import lib for DLL RTL)
+          cw32mt.lib        static multi-threaded
+          cw32mti.lib       dynamic multi-threaded
+
+        FIXME - No idea what's the different between console and win DLL is,
+                so we currently ignore it. Wide char support stuff is not
+                used either, it doesn't seem to make a difference.
+    -->
+    
+    <set var="__exe_baser">__borland_exe</set>
+    <set var="__dll_baser">__borland_dll</set>
+    <set var="__lib_baser">__borland_comp</set>
+    
+    <define-rule name="__borland_comp">
+        <template>
+            <set var="__rtldll_flag" eval="0"/>
+            <set var="__startup_obj_type">x</set> <!-- console app -->
+            <set var="__rtl_i"/>
+            <set var="__rtl_mt"/>
+            <set var="__startup" eval="0">c0$(__startup_obj_type)32.obj</set>
+            <set var="__rtl" eval="0">cw32$(__rtl_mt)$(__rtl_i).lib</set>
+            <set var="__rtldll_cppflags" eval="0">$(__rtldll_flag)</set>
+            <cppflags>$(__rtldll_cppflags)</cppflags>
+            <cppflags>-I$(DOLLAR)(BCCDIR)\include</cppflags>
+            <ldflags>
+                -L$(DOLLAR)(BCCDIR)\lib -L$(DOLLAR)(BCCDIR)\lib\psdk
+            </ldflags>
+        </template>
+        <define-tag name="runtime-libs">
+            <set var="__rtldll_flag">
+                $(substituteFromDict(value, {'static':'', 'dynamic':'-tWR'}))
+            </set>
+            <set var="__rtl_i">
+                $(substituteFromDict(value, {'static':'', 'dynamic':'i'}))
+            </set>
+        </define-tag>
+        <define-tag name="threading">
+            <set var="__rtl_mt">
+                $(substituteFromDict(value, {'multi':'mt', 'single':''}))
+            </set>
+            <cppflags>
+                $(substituteFromDict(value, {'multi':'-tWM', 'single':''}))
+            </cppflags>
+        </define-tag>
+        
+        <define-tag name="precomp-headers">
+                <!-- FIXME: should be cppflags, this is temporary hack to
+                make wxWindows work -->
+            <cxxflags> 
+                $(substituteFromDict(value,{'on':'-Hu', 'off':''}))
+            </cxxflags>
+        </define-tag>
+        <define-tag name="precomp-headers-file">
+                <!-- FIXME: should be cppflags, this is temporary hack to
+                make wxWindows work -->
+            <cxxflags>
+                $(formatIfNotEmpty('-H=%s.csm', mkPathPrefix(BUILDDIR)+value))
+            </cxxflags>
+        </define-tag>
+        <define-tag name="precomp-headers-gen">
+            <set var="__pch_object">$(getObjectName(value, id, OBJEXT))</set>
+            <set var="__deps">$(__pch_object) $(__deps)</set>
+            <modify-target target="$(__pch_object)">
+                <set var="__cflags" append="1">-H</set>
+                <set var="__cxxflags" append="1">-H</set>
+            </modify-target>
+        </define-tag>
+
+    </define-rule>
+    
+    <define-rule name="__borland_dll" extends="__borland_comp">
+        <template>
+            <set var="__startup_obj_type">d</set> <!-- for DLL -->
+        </template>
+    </define-rule>
+    <define-rule name="__borland_exe" extends="__borland_comp">
+        <define-tag name="app-type">
+            <set var="__startup_obj_type">
+                $(substituteFromDict(value, {'console':'x','gui':'w'}))
+            </set>
+        </define-tag>
+    </define-rule>
+    
+    
+    <template id="__commands_templ">
+        <!-- 
+        NB: Borland make has builtin support for response files in the form of
+            "&&|content of response file|" (where | can be any character).
+            Borland tools use "@responsefile" syntax to use resp. file. This
+            explains somehow cryptic syntax below.
+
+            Note that there must be linefeed after first | and the second |
+            must be alone on and at the beginning of the line (borland.empy
+            takes care of this part).
+            
+            (We have to use response file because of windows command
+            line length limitation.)
+            -->
+        <set var="__win32res"/>
+        <set var="__LINK_EXE_CMD" eval="0">
+            $(__linker) $(__ldflags_all) @&amp;&amp;|
+            $(__startup) $(__objects_var),$@,,$(__ldlibs) import32.lib $(__rtl),,$(__win32res)
+            |
+        </set>        
+        <set var="__LINK_LIB_CMD" eval="0">
+            if exist $@ del $@
+            tlib /a /p$(LIB_PAGESIZE) $@ @&amp;&amp;|
+            $(__objects_var)
+            |
+        </set>
+        <!-- implib -f: force import by name (rather than ordinal) -->
+        <set var="__LINK_DLL_CMD" eval="0">
+            $(__dll_linker) $(__ldflags_all) @&amp;&amp;|
+            $(__startup) $(__objects_var),$@,,$(__ldlibs) import32.lib $(__rtl),,$(__win32res)
+            |
+            implib -f $(__targetdir)$(__libname) $@
+        </set>
+        <set var="__LINK_MODULE_CMD" eval="0">
+            $(__module_linker) $(__ldflags_all) @&amp;&amp;|
+            $(__startup) $(__objects_var),$@,,$(__ldlibs) import32.lib $(__rtl),,$(__win32res)
+            |
+        </set>
+    </template>
+    
+    <template id="__subproject_templ">
+        <set var="__MAKE_SUBPROJECT_BATFILE">
+            $(mkPathPrefix(BUILDDIR))$(id).bat
+        </set>
+        <set var="__MAKE_SUBPROJECT_TEMPLATE" eval="0">
+            @echo cd $(__subdir) &gt;$(__MAKE_SUBPROJECT_BATFILE)
+            @echo $(DOLLAR)(MAKE) -f $(os.path.basename(OUTPUT_FILE)) $(MAKEARGS) @@@ &gt;&gt;$(__MAKE_SUBPROJECT_BATFILE)
+            call $(__MAKE_SUBPROJECT_BATFILE)
+            @del $(__MAKE_SUBPROJECT_BATFILE)
+        </set>
+        <set var="__MAKE_SUBPROJECT_CMD" eval="0">
+            $(__MAKE_SUBPROJECT_TEMPLATE.replace('@@@',__subtarget))
+        </set>
+        <set var="__INSTALL_SUBPROJECT_CMD">
+            $(__MAKE_SUBPROJECT_TEMPLATE.replace('@@@','install'))
+        </set>
+        <set var="__UNINSTALL_SUBPROJECT_CMD">
+            $(__MAKE_SUBPROJECT_TEMPLATE.replace('@@@','uninstall'))
+        </set>
+        <set var="__CLEAN_SUBPROJECT_CMD">
+            $(__MAKE_SUBPROJECT_TEMPLATE.replace('@@@','clean'))
+        </set>
+    </template>
+
+</makefile>

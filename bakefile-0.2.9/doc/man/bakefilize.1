@@ -1,0 +1,81 @@
+'\" t
+.\"     Title: bakefilize
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 02/02/2011
+.\"    Manual: Running Bakefile
+.\"    Source: [FIXME: source]
+.\"  Language: English
+.\"
+.TH "BAKEFILIZE" "1" "02/02/2011" "[FIXME: source]" "Running Bakefile"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+bakefilize \- prepare Bakefile project for use with Autoconf
+.SH "SYNOPSIS"
+.HP \w'\fBbakefilize\fR\ 'u
+\fBbakefilize\fR [\fB\-\-copy\fR] [\fB\-\-dry\-run\fR] [\fB\-\-force\fR] [\fB\-\-verbose\fR] [\fB\-\-help\fR]
+.SH "DESCRIPTION"
+.PP
+For the "autoconf" format, Bakefile creates Makefile\&.in files that depend on the availability of common pieces of a GNU build system\&. (config\&.guess,
+install\-sh, etc\&.) These tools are part of Automake, which can copy these files into a project\*(Aqs directory during processing\&.
+\fBbakefilize\fR
+effectively replaces the
+\fBautomake \-\-add\-missing\fR
+feature\&.
+.PP
+It is standard practice in Autoconf\-based projects to provide a "bootstrap" script (commonly called either
+\fBbootstrap\fR
+or
+\fBautogen\&.sh\fR) to run commands like
+\fBautoconf\fR
+with the proper flags and in the proper order\&. You should run
+\fBbakefilize\fR
+in that script, at some point before the
+\fBconfigure\fR
+script runs\&.
+.SH "COMMAND LINE OPTIONS"
+.PP
+.PP
+\fB\-c\fR, \fB\-\-copy\fR
+.RS 4
+Copy the files from the Automake directory, rather than the default behavior of making symbolic links\&.
+.RE
+.PP
+\fB\-n\fR, \fB\-\-dry\-run\fR
+.RS 4
+Only show the commands that would be executed\&.
+.RE
+.PP
+\fB\-f\fR, \fB\-\-force\fR
+.RS 4
+Replace all existing files, instead of only adding missing files\&.
+.RE
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
+Show debugging messages\&.
+.RE
+.PP
+\fB\-\-help\fR
+.RS 4
+Display usage information for
+\fBbakefilize\fR
+.RE

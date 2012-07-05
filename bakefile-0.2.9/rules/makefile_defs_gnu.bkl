@@ -1,0 +1,137 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2003-2007 Vaclav Slavik
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: makefile_defs_gnu.bkl 1200 2008-03-04 10:53:38Z vaclavslavik $
+  
+-->
+<makefile>
+
+    <!--
+
+      GNU compilers can be used in GNU/MinGW-only development and
+      Symbian development (which holds more compilers) therefore some shared
+      flags are exposed with __FLAG_GNU_* prefix to not conflict with flags
+      imported from makefile_defs_cw.bkl and makefile_defs_msvc.bkl
+
+      -->
+
+    <set var="__FLAG_GNU_OPTIMIZE_OFF">-O0</set>
+    <set var="__FLAG_GNU_OPTIMIZE_SIZE">-Os</set>
+    <set var="__FLAG_GNU_OPTIMIZE_SPEED">-O2</set>
+
+    <set var="__FLAG_GNU_WARNINGS_NO"/>
+    <set var="__FLAG_GNU_WARNINGS_DEFAULT"/>
+    <set var="__FLAG_GNU_WARNINGS_MAX">-W -Wall</set>
+
+    <if cond="FORMAT!='symbian'">
+
+        <if cond="FORMAT!='mingw'">
+
+            <include file="makefile_defs_unix.bkl"/>
+
+            <!--
+              We define compilation differently for GNU than for generic Unix:
+                * dependencies tracking is used
+                * we can use $< even in non-suffix rules -> smaller makefiles
+              -->
+            <set var="CPPDEPS" make_var="1">
+            -MT$(DOLLAR)@ -MF`echo $(DOLLAR)@ | sed -e 's,\.o$(DOLLAR)$(DOLLAR),.d,'` -MD -MP
+            </set>
+
+            <template id="__commands_templ_C">
+                <set var="__COMPILE_C_CMD" eval="0">
+                    $(CCC) -c -o $@ $(__cflags) $(CPPDEPS) $&lt;
+                </set>
+            </template>
+            <template id="__commands_templ_CXX">
+                <set var="__COMPILE_CXX_CMD" eval="0">
+                    $(CXXC) -c -o $@ $(__cxxflags) $(CPPDEPS) $&lt;
+                </set>
+            </template>
+
+        </if>
+
+        <set var="AROPTIONS">rcu</set>
+        <set var="DLLPREFIX_MODULE"></set>
+
+        <set var="__DEFINE_ARG">-D</set>
+        <set var="__INCLUDE_ARG">-I</set>
+        <set var="__LIB_ARG">-l%s</set>
+        <set var="__LIBDIR_ARG">-L</set>
+
+        <set var="__DEFAULT_CC">gcc</set>
+        <set var="__DEFAULT_CXX">g++</set>
+        <set var="__DEFAULT_CFLAGS"></set>
+        <set var="__DEFAULT_CPPFLAGS"></set>
+        <set var="__DEFAULT_CXXFLAGS"></set>
+        <set var="__DEFAULT_LDFLAGS"></set>
+
+        <!-- allow overriding the flags -->
+        <option name="LINK_DLL_FLAGS">
+            <description>Compiler flags to link shared library</description>
+            <default-value>-shared</default-value>
+        </option>
+        <option name="LINK_MODULE_FLAGS">
+            <description>Compiler flags to link loadable module</description>
+            <default-value>-shared</default-value>
+        </option>
+        <set var="__DLL_LINKER_CC" eval="0">$(CC) $(LINK_DLL_FLAGS) -fPIC -o</set>
+        <set var="__DLL_LINKER_CXX" eval="0">$(CXX) $(LINK_DLL_FLAGS) -fPIC -o</set>
+        <set var="__MODULE_LINKER_CC" eval="0">$(CC) $(LINK_MODULE_FLAGS) -fPIC -o</set>
+        <set var="__MODULE_LINKER_CXX" eval="0">$(CXX) $(LINK_MODULE_FLAGS) -fPIC -o</set>
+
+        <!--
+        basic compiler/linker flags (they are left almost empty because
+        it is configure's job to ensure correct cflags):
+        -->
+        <set var="__FLAG_DEBUG_ON">-g</set>
+        <set var="__FLAG_DEBUG_ON_LINKER">-g</set>
+        <set var="__FLAG_DEBUG_OFF"></set>
+        <set var="__FLAG_DEBUG_OFF_LINKER"></set>
+        <set var="__FLAG_OPTIMIZE_OFF">$(__FLAG_GNU_OPTIMIZE_OFF)</set>
+        <set var="__FLAG_OPTIMIZE_SIZE">$(__FLAG_GNU_OPTIMIZE_SIZE)</set>
+        <set var="__FLAG_OPTIMIZE_SPEED">$(__FLAG_GNU_OPTIMIZE_SPEED)</set>
+        <set var="__FLAG_ARCH_I386">-march=i386</set>
+        <set var="__FLAG_ARCH_I486">-march=i486</set>
+        <set var="__FLAG_ARCH_I586">-march=i586</set>
+        <set var="__FLAG_ARCH_I686">-march=i686</set>
+        <set var="__FLAG_USE_PCH"></set>
+        <set var="__FLAG_PCH_FILE"></set>
+        <set var="__FLAG_SINGLE_THREADING_LD"/>
+        <set var="__FLAG_MULTI_THREADING_LD">-pthread</set>
+        <set var="__FLAG_SINGLE_THREADING_CPP"/>
+        <set var="__FLAG_MULTI_THREADING_CPP">-D_THREAD_SAFE -pthread</set>
+        <set var="__FLAG_WARNINGS_NO">$(__FLAG_GNU_WARNINGS_NO)</set>
+        <set var="__FLAG_WARNINGS_DEFAULT">$(__FLAG_GNU_WARNINGS_DEFAULT)</set>
+        <set var="__FLAG_WARNINGS_MAX">$(__FLAG_GNU_WARNINGS_MAX)</set>
+
+        <set var="__FLAG_RTTI_ON"></set>
+        <set var="__FLAG_RTTI_OFF">-fno-rtti</set>
+        <set var="__FLAG_EXCEPTIONS_ON"></set>
+        <set var="__FLAG_EXCEPTIONS_OFF">-fno-exceptions</set>
+
+    </if>
+
+</makefile>

@@ -1,0 +1,103 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2006-2007 Vaclav Slavik, Kevin Powell, Steven Van Ingelgem,
+                          Kevin Ollivier, Aleksander Jaromin
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: msvs2005prj.bkl 1336 2010-02-07 13:58:32Z vaclavslavik $
+
+-->
+<makefile>
+    
+    <!-- ============================================================== -->
+    <!--                    Platforms configuration                     -->
+    <!-- ============================================================== -->
+
+    <!-- comma-separated list of platforms to include in the project file;
+         by default, only PC Win32 targets are generated. Allowed values are:
+
+         "win32"                    - Win32
+         "win64"                    - x64
+         "pocketpc2003"             - Pocket PC 2003 (ARMV4)
+      -->
+    <set var="MSVS_PLATFORMS" overwrite="0">win32</set>
+
+    <set var="MSVS_PLATFORMS_DESC">
+        $(','.join([substituteFromDict(x,
+                    {
+                       'win32'        : 'Win32',
+                       'win64'        : 'x64',
+                       'pocketpc2003' : 'Pocket PC 2003 (ARMV4)',
+                     })
+                   for x in MSVS_PLATFORMS.split(',')]))
+    </set>
+    
+    
+    <!-- ============================================================== -->
+    <!--                   Platform-specific settings                   -->
+    <!-- ============================================================== -->
+
+    <set var="_default_builddir">
+        <!-- "standard" case: -->
+        <if cond="MSVS_PLATFORMS=='win32'">
+            $(DOLLAR)(SolutionDir)$(DOLLAR)(ConfigurationName)
+        </if>
+        <!-- either embedded-only or mixed projects: -->
+        <if cond="MSVS_PLATFORMS!='win32'">
+            $(DOLLAR)(PlatformName)\$(DOLLAR)(ConfigurationName)
+        </if>
+    </set>
+    
+    <template id="_compiled_baset">
+        <set var="_platform_extra_defines">
+            <if cond="MSVS_PLATFORM=='pocketpc2003'">
+                _WIN32_WCE=$(DOLLAR)(CEVER);UNDER_CE;$(DOLLAR)(PLATFORMDEFINES);$(DOLLAR)(ARCHFAM);$(DOLLAR)(_ARCHFAM_);_UNICODE;UNICODE
+            </if>
+        </set>
+        <set var="_platform_extra_res_defines">
+            <if cond="MSVS_PLATFORM=='pocketpc2003'">
+                _WIN32_WCE=$(DOLLAR)(CEVER);UNDER_CE;$(DOLLAR)(PLATFORMDEFINES)
+            </if>
+        </set>
+        <set var="_platform_extra_ldflags">
+            <if cond="MSVS_PLATFORM=='pocketpc2003'">
+                /subsystem:windowsce,4.20 /machine:ARM /ARMPADCODE
+            </if>
+        </set>
+
+        <set var="_defines">$(_platform_extra_defines)</set>
+        <set var="_res_defines">$(_platform_extra_res_defines)</set>
+        <set var="_ldflags">$(_platform_extra_ldflags)</set>
+    </template>
+
+    
+    <!-- ============================================================== -->
+    <!--    Set format-specific settings and call common MSVC code:     -->
+    <!-- ============================================================== -->
+
+    <set var="_MSVS_VCPROJ_VERSION" overwrite="0">8.00</set>
+    <set var="_MSVS_SLN_VERSION" overwrite="0">9.00</set>
+
+    <include file="msvs200xprj.bkl"/>
+
+</makefile>

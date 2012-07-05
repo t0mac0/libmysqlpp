@@ -1,0 +1,107 @@
+<?xml version="1.0" ?>
+<!-- $Id: Bakefiles.bkgen 1249 2008-09-07 20:56:18Z vaclavslavik $ -->
+
+<bakefile-gen xmlns="http://www.bakefile.org/schema/bakefile-gen">
+
+    <!-- 
+       NOTE: when updating the following list remember to update
+             also the list in root.bkl and configure.in files.
+    -->
+    <input>
+        root.bkl
+        cond/hello.bkl
+        cond_install/cond_install.bkl
+        condlinking/condlinking.bkl
+        condvar_transitivity/condvar_transitivity.bkl
+        datafiles/datafiles.bkl
+        debug/debug.bkl
+        definetag/definetag.bkl
+        defineglobaltag/defineglobaltag.bkl
+        dll/dll.bkl
+        echo/echo.bkl
+        envvar/envvar.bkl
+        features/features.bkl
+        filelist/filelist.bkl
+        gettext/gettext.bkl
+        headers/headers.bkl
+        hello/hello.bkl
+        includeonce/includeonce.bkl
+        isdefined/isdefined.bkl
+        library/library.bkl
+        module/module.bkl
+        paths/paths.bkl
+        pch/pch.bkl
+        pkgconfig/pkgconfig.bkl
+        regressions/regressions.bkl
+        regressions/*/*.bkl
+        subproject/subproject.bkl
+        subproject/subdir/*.bkl
+        variants/variants.bkl
+    </input>
+
+    <add-formats>
+        autoconf,borland,dmars,dmars_smake,gnu,mingw,msevc4prj,msvc,msvc6prj,msvs2003prj,msvs2005prj,msvs2008prj,symbian,watcom,xcode2
+    </add-formats>
+
+    <!-- WinCE can't handle console-only apps (FIXME: build tests anyway!): -->
+    <del-formats files="cond/*.bkl">msevc4prj</del-formats>
+    <del-formats files="cond_install/*.bkl">msevc4prj</del-formats>
+    <del-formats files="echo/*.bkl">msevc4prj</del-formats>
+    <del-formats files="envvar/*.bkl">msevc4prj</del-formats>
+    <del-formats files="isdefined/*.bkl">msevc4prj,dmars</del-formats>
+    <del-formats files="regressions/*.bkl">msevc4prj</del-formats>
+    <del-formats files="pch/*.bkl">msevc4prj</del-formats>
+    <del-formats files="debug/*.bkl">msevc4prj</del-formats>
+    <del-formats files="paths/*.bkl">msevc4prj</del-formats>
+    <del-formats files="headers/*.bkl">msevc4prj</del-formats>
+    <del-formats files="definetag/*.bkl">msevc4prj</del-formats>
+    <del-formats files="defineglobaltag/*.bkl">msevc4prj,dmars</del-formats>
+    <del-formats files="variants/*.bkl">msevc4prj,dmars</del-formats>
+    <del-formats files="filelist/*.bkl">msevc4prj</del-formats>
+
+    <!-- MS IDEs don't support conditional dependencies: -->
+    <del-formats files="condlinking/*.bkl">
+        msvc6prj,msevc4prj,msvs2003prj,msvs2005prj,msvs2008prj,xcode2
+    </del-formats>
+
+    <!-- DigitalMars' make can't handle conditions: -->
+    <del-formats files="cond*/*.bkl">dmars</del-formats>
+
+    <!-- Project files don't make sense for root makefile: -->
+    <del-formats files="root.bkl">
+        msevc4prj,msvc6prj,msvs2003prj,msvs2005prj,msvs2008prj
+    </del-formats>
+    <del-formats files="gettext/*.bkl">
+        msevc4prj,msvc6prj,msvs2003prj,msvs2005prj,msvs2008prj
+    </del-formats>
+
+
+    <!-- Format specific settings: -->
+    <add-flags formats="autoconf">
+        -DAUTOCONF_MACROS_FILE=./autoconf_inc.m4
+    </add-flags>
+
+    <!-- prevent conflict between VS200{3,5,8} project files: -->
+    <add-flags formats="msvs2003prj">
+        -o $(INPUT_FILE_DIR)/$(INPUT_FILE_BASENAME_NOEXT)_vc7.sln
+    </add-flags>
+    <add-flags formats="msvs2008prj">
+        -o $(INPUT_FILE_DIR)/$(INPUT_FILE_BASENAME_NOEXT)_vc9.sln
+    </add-flags>
+
+    <!-- This is for testing [un]install targets for win32 formats -->
+    <add-flags formats="msvc,mingw,borland,watcom">
+        -DFORMAT_HAS_MAKE_INSTALL=1
+    </add-flags>
+
+    <!-- Test variants feature: -->
+    <add-flags files="variants/*.bkl">-DSOMETHING=1</add-flags>
+    <add-formats files="variants/*.bkl">gnu(var1),gnu(var2)</add-formats>
+    <add-flags files="variants/*.bkl" formats="gnu(var1)">
+        -DMESSAGE="variant1" -o $(INPUT_FILE_DIR)/Makefile.gnu1
+    </add-flags>
+    <add-flags files="variants/*.bkl" formats="gnu(var2)">
+        -DMESSAGE="variant2" -o $(INPUT_FILE_DIR)/Makefile.gnu2
+    </add-flags>
+
+</bakefile-gen>

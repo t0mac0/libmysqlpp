@@ -1,0 +1,76 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2003-2007 Vaclav Slavik
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: msvc6prj.bkl 1117 2007-12-28 12:44:18Z vaclavslavik $
+
+-->
+<makefile>
+
+    <set var="COMPILER">vc</set>
+
+    <set var="_MSVC_TYPECODE_CONSOLE">0x0103</set>
+    <set var="_MSVC_TYPECODE_GUI">0x0101</set>
+    <set var="_MSVC_TYPECODE_DLL">0x0102</set>
+    <set var="_MSVC_TYPECODE_LIB">0x0104</set>
+
+    <set var="_MSVC_CPU_NAME">x86</set>
+    
+    
+    <template id="_compiled_baset">
+        <set var="_default_builddir" eval="0">
+            $(substituteFromDict(_debug,{'0':'Release','1':'Debug'}))
+        </set>
+        
+        <set var="_ldlibs"/>
+        <set var="_defines">/D "WIN32"</set>
+        <set var="_ldflags">/machine:i386</set>
+        <set var="_win32rc_flags">/l 0x409</set> <!-- US English locale -->
+        <set var="_cppflags">/FD</set> <!-- /FD: minimal rebuild -->
+        
+        <!-- choice of C runtime library: -->
+        <set var="_rtl_dbg"/>
+        <set var="_rtl_static">L</set>
+        <set var="_rtl_type">D</set>
+        <set var="_rtl" eval="0">/M$(_rtl_type)$(_rtl_dbg)</set>
+        <cppflags>$(_rtl)</cppflags>
+    </template>
+    
+    <template id="_exe_baset"/>
+    <template id="_dll_baset"/>
+    
+    <define-rule name="_compiled_specific">
+        <define-tag name="debug-info">
+            <cppflags>
+                $(substituteFromDict(value, {'on':'/Zi', 'off':''}))
+            </cppflags>
+            <!-- NB: rest of handling is done in msvc_prj_common.bkl -->
+        </define-tag>
+    </define-rule>
+
+    <include file="msvc_prj_dsp_common.bkl"/>
+
+    <output file="$(OUTPUT_FILE)" writer="msvc6prj.py"/>
+
+</makefile>

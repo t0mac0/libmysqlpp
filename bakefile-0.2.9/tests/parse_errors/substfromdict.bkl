@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<!-- test incorrect use of substituteFromDict, with key not listed: -->
+<makefile>
+    <exe id="test">
+        <sources>test.c</sources>
+        <!-- use valid argument value: -->
+        <debug-info>on</debug-info>
+        <!-- use invalid argument value: -->
+        <app-type>invalid_value</app-type>
+    </exe>
+</makefile>

@@ -1,0 +1,305 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2003-2008 Vaclav Slavik
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: makefile_defs_watcom.bkl 1190 2008-01-28 10:09:13Z vaclavslavik $
+
+-->
+<makefile>
+
+    <set var="OBJEXT">.obj</set>
+
+    <if cond="PLATFORM_OS2=='0' and PLATFORM_MSDOS=='0'">
+        <include file="win32.bkl"/>
+    </if>
+    <if cond="PLATFORM_MSDOS=='1'">
+        <option name="DOS32">
+            <values>
+                X32VM,
+                X32,
+                PMODEW,
+                CAUSEWAY,
+                DOS32A,
+                DOS4GW
+            </values>
+            <values-description>
+                FlashTek X-32VM DOS extender,
+                FlashTek X-32 DOS extender,
+                PMODE/W,
+                CauseWay DOS extender,
+                DOS32/A,
+                Tenberry/Watcom 32-bit DOS extender
+            </values-description>
+            <default-value>DOS4GW</default-value>
+            <description>
+                DOS32 mode/extender
+            </description>
+        </option>
+        <set var="__DOS_LDFLAG">
+            <if cond="DOS32=='X32VM'">X32RV</if>
+            <if cond="DOS32=='X32'">X32R</if>
+            <if cond="DOS32=='PMODEW'">PMODEW</if>
+            <if cond="DOS32=='CAUSEWAY'">CAUSEWAY</if>
+            <if cond="DOS32=='DOS32A'">DOS32A</if>
+            <if cond="DOS32=='DOS4GW'">DOS4G</if>
+        </set>
+        <set var="__DOS_CFLAG">
+            <if cond="DOS32=='X32VM'">X32VM</if>
+            <if cond="DOS32=='X32'">X32VM</if>
+            <if cond="DOS32=='PMODEW'">DOS4GW</if>
+            <if cond="DOS32=='CAUSEWAY'">DOS4GW</if>
+            <if cond="DOS32=='DOS32A'">DOS4GW</if>
+            <if cond="DOS32=='DOS4GW'">DOS4GW</if>
+        </set>
+    </if>
+    <if cond="PLATFORM_OS2=='1' or PLATFORM_MSDOS=='1'">
+        <set var="TOOLSET">
+            <if cond="PLATFORM_MSDOS=='1'">dos</if>
+            <if cond="PLATFORM_OS2=='1'">os2</if>
+        </set>
+        <set var="DIRSEP">\</set>
+
+        <set var="LIBEXT">.lib</set>
+        <set var="LIBPREFIX"></set>
+        <set var="EXEEXT">.exe</set>
+        <set var="DLLEXT">.dll</set>
+        <set var="DLLEXT_MODULE">.dll</set>
+        <set var="DLLIMPEXT">$(LIBEXT)</set>
+        <set var="DLLPREFIX"></set>
+        <set var="DLLPREFIX_MODULE"></set>
+        <set var="PIC_CFLAGS"></set>
+
+        <set var="RM">-del</set>
+
+        <set var="INSTALL_PROGRAM">copy /Y</set>
+        <set var="INSTALL_DATA">$(INSTALL_PROGRAM)</set>
+        <set var="UNINSTALL_PROGRAM">$(RM)</set>
+        <set var="UNINSTALL_DATA">$(UNINSTALL_PROGRAM)</set>
+
+        <!-- for static libraries: -->
+        <set var="LIB_PAGESIZE" overwrite="0">4096</set>
+    </if>
+
+    <!-- target settings: -->
+    <set var="__TARGET_FLAG">
+        <if cond="PLATFORM_WIN32=='1'">-bt=nt</if>
+        <if cond="PLATFORM_MSDOS=='1'">-bt=dos</if>
+        <if cond="PLATFORM_OS2=='1'">-bt=os2</if>
+        <if cond="PLATFORM_UNIX=='1'">-bt=linux</if>
+    </set>
+
+    <set var="__DEFINE_ARG">-d</set>
+    <set var="__INCLUDE_ARG">-i=</set>
+    <set var="__LIB_ARG">%s.lib</set>
+    <set var="__LIBDIR_ARG">libpath$(SPACE)</set>
+
+    <set var="__DEFAULT_CC">wcc386</set>
+    <set var="__DEFAULT_CXX">wpp386</set>
+    <set var="__DEFAULT_CFLAGS"></set>
+    <set var="__DEFAULT_CPPFLAGS"></set>
+    <set var="__DEFAULT_CXXFLAGS"></set>
+    <set var="__DEFAULT_LDFLAGS"></set>
+
+    <set var="__LINKER_CC">wlink</set>
+    <set var="__LINKER_CXX">wlink</set>
+    <set var="__DLL_LINKER_CC">wlink</set>
+    <set var="__DLL_LINKER_CXX">wlink</set>
+    <set var="__MODULE_LINKER_CC">$(__DLL_LINKER_CC)</set>
+    <set var="__MODULE_LINKER_CXX">$(__DLL_LINKER_CXX)</set>
+
+    <!-- basic compiler/linker flags: -->
+    <set var="__FLAG_DEBUG_ON">-d2</set>
+    <set var="__FLAG_DEBUG_ON_LINKER">debug all</set>
+    <set var="__FLAG_DEBUG_OFF">-d0</set>
+    <set var="__FLAG_DEBUG_OFF_LINKER"></set>
+    <set var="__FLAG_OPTIMIZE_OFF">-od</set>
+    <set var="__FLAG_OPTIMIZE_SIZE">-os</set>
+    <set var="__FLAG_OPTIMIZE_SPEED">-ot -ox</set>
+    <set var="__FLAG_ARCH_I386">-3</set>
+    <set var="__FLAG_ARCH_I486">-4</set>
+    <set var="__FLAG_ARCH_I586">-5</set>
+    <set var="__FLAG_ARCH_I686">-6</set>
+    <set var="__FLAG_SINGLE_THREADING_LD"/>
+    <set var="__FLAG_MULTI_THREADING_LD"/>
+    <set var="__FLAG_SINGLE_THREADING_CPP"/>
+    <set var="__FLAG_MULTI_THREADING_CPP"/>
+    <set var="__FLAG_WARNINGS_NO"/>
+    <set var="__FLAG_WARNINGS_DEFAULT"/>
+    <set var="__FLAG_WARNINGS_MAX">-wx</set>
+    <!-- NB: we explicitly reference startup function in case it was
+             in a library (e.g. wxWindows) in which case wlink would
+             optimize it out: -->
+    <set var="__FLAG_EXE">
+        <if cond="PLATFORM_MSDOS=='1'">system $(__DOS_LDFLAG)</if>
+        <if cond="PLATFORM_UNIX=='1'">system linux</if>
+    </set>
+    <set var="__FLAG_EXE_CONSOLE">
+        <if cond="PLATFORM_WIN32=='1'">system nt ref 'main_'</if>
+        <if cond="PLATFORM_OS2=='1'">system os2v2</if>
+        <if cond="PLATFORM_WIN32!='1'">$(__FLAG_EXE)</if>
+    </set>
+    <set var="__FLAG_EXE_GUI">
+        <if cond="PLATFORM_WIN32=='1'">system nt_win ref '_WinMain@16'</if>
+        <if cond="PLATFORM_OS2=='1'">system os2v2_pm</if>
+        <if cond="PLATFORM_WIN32!='1'">$(__FLAG_EXE)</if>
+    </set>
+
+    <set var="__FLAG_RTTI_ON">-xr</set>
+    <set var="__FLAG_RTTI_OFF"></set>
+    <set var="__FLAG_EXCEPTIONS_ON">-xs</set>
+    <set var="__FLAG_EXCEPTIONS_OFF"></set>
+
+
+    <!-- rules building blocks: -->
+
+    <template id="__commands_templ_C">
+        <set var="__deps" append="1">.AUTODEPEND</set>
+        <set var="__COMPILE_C_CMD" eval="0">
+            $(CC) $(__TARGET_FLAG) -zq -fo=$^@ $(__cflags) $&lt;
+        </set>
+    </template>
+
+    <template id="__commands_templ_CXX">
+        <set var="__deps" append="1">.AUTODEPEND</set>
+        <set var="__COMPILE_CXX_CMD" eval="0">
+            $(CXX) $(__TARGET_FLAG) -zq -fo=$^@ $(__cxxflags) $&lt;
+        </set>
+    </template>
+
+    <set var="__exe_baser">__watcom_comp</set>
+    <set var="__dll_baser">__watcom_comp</set>
+    <set var="__dll_baset">__watcom_dll</set>
+    <set var="__lib_baser">__watcom_comp</set>
+
+    <template id="__watcom_dll">
+        <cppflags>-bd</cppflags> <!-- DLL target -->
+    </template>
+
+    <define-rule name="__watcom_comp">
+        <template>
+            <set var="__libpath"/>
+            <set var="__pch_flag"/>
+            <set var="__stack_var">
+                <if cond="PLATFORM_MSDOS=='1'">256k</if>
+            </set>
+            <!-- FIXME: get rid of this once tag ordering works!: -->
+            <set var="__pch_cppflags" eval="0">$(__pch_flag)</set>
+            <!-- FIXME: should be cppflags, temporary fix to make wxWin
+                   working!! -->
+            <cxxflags>$(__pch_cppflags)</cxxflags>
+            <define cond="PLATFORM_MSDOS=='1'">$(__DOS_CFLAG)</define>
+        </template>
+
+        <define-tag name="threading">
+            <cppflags>
+                $(substituteFromDict(value,{'multi':'-bm','single':''}))
+            </cppflags>
+        </define-tag>
+
+        <define-tag name="lib-path">
+            <set var="__libpath" append="1">;$(value)</set>
+        </define-tag>
+
+        <define-tag name="runtime-libs">
+            <cppflags>
+                $(substituteFromDict(value, {'static':'', 'dynamic':'-br'}))
+            </cppflags>
+        </define-tag>
+
+        <define-tag name="precomp-headers">
+            <set var="__pch_flag">/fh</set>
+        </define-tag>
+        <define-tag name="precomp-headers-file">
+            <set var="__pch_flag">
+                $(formatIfNotEmpty('/fh=%s.pch', mkPathPrefix(BUILDDIR)+value))
+            </set>
+        </define-tag>
+    </define-rule>
+
+
+    <template id="__commands_templ">
+        <set var="__win32res_flag"/>
+
+        <set var="__lbc_file">$(mkPathPrefix(BUILDDIR))$(id).lbc</set>
+        <set var="__dll_option">
+            <if cond="PLATFORM_WIN32=='1'">nt_dll</if>
+            <if cond="PLATFORM_OS2=='1'">os2v2 dll</if>
+        </set>
+        <set var="__LINK_CMD_BASE" eval="0">
+            @%create $(__lbc_file)
+            @%append $(__lbc_file) option quiet
+            @%append $(__lbc_file) name $^@
+            @%append $(__lbc_file) option caseexact
+            @%append $(__lbc_file) $(__ldflags_all)
+            @for %i in ($(__objects_var)) do @%append $(__lbc_file) file %i
+            @for %i in ($(__ldlibs)) do @%append $(__lbc_file) library %i
+            @%append $(__lbc_file) $(__win32res_flag)
+        </set>
+        <set var="__LINK_EXE_CMD" eval="0">
+            $(__LINK_CMD_BASE)
+            @for %i in ($(__stack_var)) do @%append $(__lbc_file) option stack=%i
+            $(__linker) @$(__lbc_file)
+        </set>
+        <set var="__LINK_LIB_CMD" eval="0">
+            @%create $(__lbc_file)
+            @for %i in ($(__objects_var)) do @%append $(__lbc_file) +%i
+            wlib -q -p$(LIB_PAGESIZE) -n -b $^@ @$(__lbc_file)
+        </set>
+        <set var="__LINK_DLL_CMD" eval="0">
+            $(__LINK_CMD_BASE)
+            @%append $(__lbc_file) system $(__dll_option)
+            $(__linker) @$(__lbc_file)
+            wlib -q -n -b $(__targetdir)$(__libname).lib +$^@
+        </set>
+        <set var="__LINK_MODULE_CMD" eval="0">
+            $(__LINK_CMD_BASE)
+            @%append $(__lbc_file) system nt_dll
+            $(__linker) @$(__lbc_file)
+        </set>
+    </template>
+
+    <template id="__subproject_templ">
+        <set var="__MAKE_SUBPROJECT_CMD" eval="0">
+            cd $(__subdir)
+            wmake $(DOLLAR)(__MAKEOPTS__) -f $(os.path.basename(OUTPUT_FILE)) $(MAKEARGS) $(__subtarget)
+            cd $(DOLLAR)(WATCOM_CWD)
+        </set>
+        <set var="__INSTALL_SUBPROJECT_CMD" eval="0">
+            cd $(__subdir)
+            wmake $(DOLLAR)(__MAKEOPTS__) -f $(os.path.basename(OUTPUT_FILE)) $(MAKEARGS) install
+            cd $(DOLLAR)(WATCOM_CWD)
+        </set>
+        <set var="__UNINSTALL_SUBPROJECT_CMD" eval="0">
+            cd $(__subdir)
+            wmake $(DOLLAR)(__MAKEOPTS__) -f $(os.path.basename(OUTPUT_FILE)) $(MAKEARGS) uninstall
+            cd $(DOLLAR)(WATCOM_CWD)
+        </set>
+        <set var="__CLEAN_SUBPROJECT_CMD" eval="0">
+            cd $(__subdir)
+            wmake $(DOLLAR)(__MAKEOPTS__) -f $(os.path.basename(OUTPUT_FILE)) $(MAKEARGS) clean
+            cd $(DOLLAR)(WATCOM_CWD)
+        </set>
+    </template>
+
+</makefile>

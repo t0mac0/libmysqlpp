@@ -1,0 +1,268 @@
+'\" t
+.\"     Title: bakefile
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 02/02/2011
+.\"    Manual: Running Bakefile
+.\"    Source: [FIXME: source]
+.\"  Language: English
+.\"
+.TH "BAKEFILE" "1" "02/02/2011" "[FIXME: source]" "Running Bakefile"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+bakefile \- native makefiles generator
+.SH "SYNOPSIS"
+.HP \w'\fBbakefile\fR\ 'u
+\fBbakefile\fR [\fB\-\-version\fR] [\fB\-\-help\fR] \fB\-f\fR\fIFORMAT\fR \fB\-o\fR\fIOUTFILE\fR [\fB\-\-eol=[format|dos|unix|mac|native]\fR] [\fB\-\-wrap\-output=[no|\fR\fB\fILENGTH\fR\fR\fB]\fR] [\fB\-D\fR\fIVAR\fR=\fIVALUE\fR...] [\fB\-I\fR\fIPATH\fR...] [\fB\-v\fR] [\fB\-q\fR] [\fB\-\-dry\-run\fR] [\fB\-\-touch\fR] [\fB\-\-dump\fR] \fIfile\&.bkl\fR
+.SH "DESCRIPTION"
+.PP
+
+\fBbakefile\fR
+creates various types of Makefiles and project files from a single project description called a "Bakefile"\&.
+.SH "COMMAND LINE OPTIONS"
+.PP
+.PP
+\fB\-\-version\fR
+.RS 4
+Display Bakefile version and exit\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Display usage information and exit\&.
+.RE
+.PP
+\fB\-f\fR\fIFORMAT\fR, \fB\-\-format\fR=\fIFORMAT\fR
+.RS 4
+Specify output format\&. Bakefile supports the following formats:
+.sp
+.TS
+allbox tab(:);
+lB lB.
+T{
+Format
+T}:T{
+File(s) Generated
+T}
+.T&
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l.
+T{
+autoconf
+T}:T{
+Makefile\&.in for GNU Autoconf
+T}
+T{
+borland
+T}:T{
+Makefile for Borland C++ and Borland
+                        make
+T}
+T{
+dmars
+T}:T{
+Generic Makefile for Digital Mars C/C++
+T}
+T{
+dmars_smake
+T}:T{
+Makefile for Digital Mars C/C++ with
+                        SMAKE
+T}
+T{
+gnu
+T}:T{
+Makefile for GNU toolchain: GNU Make, GCC,
+                        etc\&.
+T}
+T{
+mingw
+T}:T{
+Makefile for MinGW toolchain:
+                        mingw32\-make, MinGW port of GCC, etc\&.
+T}
+T{
+msvc
+T}:T{
+Makefile for Visual C++ with Microsoft
+                        nmake
+T}
+T{
+msvc6prj
+T}:T{
+Microsoft Visual C++ 6\&.0 project files
+T}
+T{
+msevc4prj
+T}:T{
+Microsoft Embedded Visual C++ 4 project
+                        files
+T}
+T{
+msvs2003prj
+T}:T{
+MS Visual Studio 2003 project files
+T}
+T{
+msvs2005prj
+T}:T{
+MS Visual Studio 2005 project files
+T}
+T{
+msvs2008prj
+T}:T{
+MS Visual Studio 2008 project files
+T}
+T{
+suncc
+T}:T{
+GNU makefile for SunCC compiler
+T}
+T{
+symbian
+T}:T{
+Symbian development files
+T}
+T{
+watcom
+T}:T{
+Makefile for OpenWatcom C/C++
+T}
+T{
+xcode2
+T}:T{
+Apple Xcode 2\&.4 project files
+T}
+.TE
+.sp 1
+.RE
+.PP
+\fB\-o\fR\fIOUTFILE\fR, \fB\-\-output\fR=\fIOUTFILE\fR
+.RS 4
+File to write generated makefile to\&. For those backends that generate more than one file, this option specifies the name of the main makefile\&.
+.sp
+This option has special meaning for msvs200xprj formats: by default, both the project files (one for each target) and a solution file, containing all the project files, are generated\&. However if OUTFILE is a file with \&.vcproj extension, then only the (necessarily unique) project file will be generated\&.
+.RE
+.PP
+\fB\-D\fR\fIVAR\fR=\fIVALUE\fR
+.RS 4
+Define Bakefile variable\&. This definition overrides any definition from the ruleset or input makefile\&. You can use it to customize generated output\&.
+.RE
+.PP
+\fB\-\-eol\fR=\fI[format|dos|unix|mac|native]\fR
+.RS 4
+Change the type of line endings used by general files\&.
+dos,
+unix
+and
+mac
+specify the line endings used by respective platforms\&.
+native
+will use line endings of the platform Bakefile is ran on (doing this is usually a bad idea, but it is useful e\&.g\&. when checking generated files into RCS system that can\*(Aqt deal with line endings correctly, such as CVS)\&. The default value is
+format
+and means that the most appropriate line endings for the output format will be used \- Windows makefiles will use DOS line endings, Autoconf makefiles will use Unix ones and so on\&.
+.RE
+.PP
+\fB\-\-wrap\-output\fR=\fI[no|LENGTH]\fR
+.RS 4
+Change line wrappings behavior\&. By default, Bakefile wraps generated makefiles so that lines don\*(Aqt exceed 75 characters\&. Use this option to either change the limit or to disable wrapping entirely by using
+no
+as the value\&.
+.RE
+.PP
+\fB\-I\fR\fIPATH\fR
+.RS 4
+Add path to the list of directories where Bakefile looks for rules and output templates\&.
+.RE
+.PP
+\fB\-\-dry\-run\fR
+.RS 4
+Process the bakefile normally, but instead of creating or modifying files, just print which files would be changed without actually modifying them\&.
+.RE
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
+Be verbose\&.
+.RE
+.PP
+\fB\-q\fR, \fB\-\-quiet\fR
+.RS 4
+Supress all output except for errors\&.
+.RE
+.PP
+\fB\-\-touch\fR
+.RS 4
+Always touch output files, even if their content doesn\*(Aqt change\&.
+.RE
+.PP
+\fB\-\-debug\fR
+.RS 4
+show internal debugging information
+.RE
+.PP
+\fB\-\-dump\fR
+.RS 4
+Dump all Bakefile variables and targets to standard output instead of generating output\&. This is only useful for debugging Bakefile or ill\-behaving makefiles\&.
+.RE
+.PP
+\fB\-\-output\-deps\fR=\fIFILE\fR
+.RS 4
+Output dependency information needed by
+\fBbakefile_gen\fR
+utility
+.RE
+.PP
+\fB\-\-output\-changes\fR=\fIFILE\fR
+.RS 4
+Store list of changed files to the given file
+.RE
+.PP
+\fB\-\-xml\-cache\fR=\fIFILE\fR
+.RS 4
+specify cache file where
+\fBbakefile_gen\fR
+stores pre\-parsed XML files
+.RE
+.SH "ENVIRONMENT VARIABLES"
+.PP
+.PP
+BAKEFILE_PATHS
+.RS 4
+List of directories where ruleset files are looked for (syntax is same as in
+\fIPATH\fR)\&. Bakefile\*(Aqs data directory is always searched in addition to paths listed in
+\fIBAKEFILE_PATHS\fR, but
+\fIBAKEFILE_PATHS\fR
+has higher priority\&.
+.RE

@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<makefile>
+    <include file="onefilemultipleconds.bkl"/>
+    <include file="cleanfiles.bkl"/>
+    <include file="win32rcflags.bkl"/>
+    <include file="win32rcflags2.bkl"/>
+    <include file="depends-on-file.bkl"/>
+</makefile>

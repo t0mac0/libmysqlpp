@@ -1,0 +1,99 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2003-2008 Vaclav Slavik
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: makefile_defs_mingw.bkl 1200 2008-03-04 10:53:38Z vaclavslavik $
+
+-->
+<makefile>
+    
+    <include file="win32.bkl"/>
+    <include file="makefile_defs_gnu.bkl"/>
+    
+    <set var="AR">ar</set>
+    <set var="RANLIB">ranlib</set>
+    <set var="WINDRES">windres --use-temp-file</set>
+
+    <set var="OBJEXT">.o</set>
+    <set var="LIBEXT">.a</set>
+    <set var="LIBPREFIX">lib</set>
+    <set var="DLLIMPEXT">.a</set>
+    <set var="DLLPREFIX"></set>
+    <set var="PIC_CFLAGS"></set>
+    
+    <set var="__LINKER_CC" eval="0">$(CC)</set>
+    <set var="__LINKER_CXX" eval="0">$(CXX)</set>
+    
+    <set var="__FLAG_MULTI_THREADING_LD">-mthreads</set>
+    <set var="__FLAG_MULTI_THREADING_CPP">-mthreads</set>
+
+    <set var="__FLAG_EXE_CONSOLE"></set>
+    <set var="__FLAG_EXE_GUI">-Wl,--subsystem,windows -mwindows</set>
+    
+    <!-- dependency tracking: -->
+    <set var="CPPDEPS" make_var="1">-MT$(DOLLAR)@ -MF$(DOLLAR)@.d -MD -MP</set>
+
+    <template id="__commands_templ_C">
+        <set var="__COMPILE_C_CMD" eval="0">
+            $(CC) -c -o $@ $(__cflags) $(CPPDEPS) $&lt;
+        </set>
+    </template>
+    <template id="__commands_templ_CXX">
+        <set var="__COMPILE_CXX_CMD" eval="0">
+            $(CXX) -c -o $@ $(__cxxflags) $(CPPDEPS) $&lt;
+        </set>
+    </template>
+    <template id="__commands_templ">
+        <set var="__LINK_EXE_CMD" eval="0">
+            $(__linker) -o $@ $(__objects_var) $(__ldflags_all) $(__ldlibs)
+        </set>        
+        <set var="__LINK_LIB_CMD" eval="0">
+            if exist $@ del $@
+            $(AR) $(AROPTIONS) $@ $(__objects_var)
+            $(RANLIB) $@
+        </set>
+        <set var="__LINK_DLL_CMD" eval="0">
+            $(__dll_linker) $@ $(__objects_var) $(__ldflags_all) $(__ldlibs)
+        </set>
+        <set var="__LINK_MODULE_CMD" eval="0">
+            $(__module_linker) $@ $(__objects_var) $(__ldflags_all) $(__ldlibs)
+        </set>
+    </template>
+
+    <template id="__subproject_templ">
+        <set var="__MAKE_SUBPROJECT_CMD" eval="0">
+            $(DOLLAR)(MAKE) -C $(__subdir) -f $(os.path.basename(OUTPUT_FILE)) $(MAKEARGS) $(__subtarget)
+        </set>
+        <set var="__INSTALL_SUBPROJECT_CMD" eval="0">
+            $(DOLLAR)(MAKE) -C $(__subdir) -f $(os.path.basename(OUTPUT_FILE)) $(MAKEARGS) install
+        </set>
+        <set var="__UNINSTALL_SUBPROJECT_CMD" eval="0">
+            $(DOLLAR)(MAKE) -C $(__subdir) -f $(os.path.basename(OUTPUT_FILE)) $(MAKEARGS) uninstall
+        </set>
+        <set var="__CLEAN_SUBPROJECT_CMD" eval="0">
+            $(DOLLAR)(MAKE) -C $(__subdir) -f $(os.path.basename(OUTPUT_FILE)) $(MAKEARGS) clean
+        </set>
+    </template>
+
+</makefile>

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ "${OSTYPE:0:6}" = "darwin" ]; then
+    LIBTOOLIZE=glibtoolize
+else
+    LIBTOOLIZE=libtoolize
+fi
+
+aclocal -I admin &&
+	$LIBTOOLIZE --automake -c -f &&
+	automake --foreign -a -c -f &&
+	autoconf && 
+	(cd src ; swig -python bkl_c.i)

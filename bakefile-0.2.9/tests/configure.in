@@ -1,0 +1,76 @@
+AC_PREREQ(2.53)
+AC_INIT([bakefile-tests], [0.1], [bakefile-devel@lists.sourceforge.net])
+AC_CONFIG_SRCDIR([Bakefiles.bkgen])
+
+AC_CANONICAL_HOST
+
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_CXXCPP
+
+
+# to test if the LIBS option is correctly substituted in Makefile.in files, we
+# do a fake check here using AC_CHECK_LIB([m], [sin]) which prepends '-lm' to
+# LIBS in its default action-if-found.
+AC_CHECK_LIB([m], [sin])
+
+# this is used to test if <subproject>s (and their 'install' and 'install-strip' targets)
+# are correctly handled when using conditional targets
+AC_ARG_ENABLE([datafiles], AC_HELP_STRING([--enable-datafiles],
+         [Enables the datafiles subproject (default is no)]), [], [enable_datafiles=no])
+
+AC_MSG_CHECKING([for the --enable-datafiles option])
+if test "$enable_datafiles" = "yes"; then
+    DATAFILES=1
+    AC_MSG_RESULT([yes])
+else
+    DATAFILES=0
+    AC_MSG_RESULT([no])
+fi
+
+
+# in order to be able to correctly test the 'cond_install' and 'headers' test programs,
+# we need to define the following:
+BUILD_BOTH=1
+DO_INSTALL=1
+
+
+AC_BAKEFILE([m4_include(autoconf_inc.m4)])
+
+
+#
+# NOTE: when updating the following list remember to update also
+#       the list in the root.bkl and Bakefile.bkgen files.
+#
+AC_CONFIG_FILES([
+       Makefile
+       cond/Makefile
+       cond_install/Makefile
+       condlinking/Makefile
+       condvar_transitivity/Makefile
+       datafiles/Makefile
+       debug/Makefile
+       definetag/Makefile
+       defineglobaltag/Makefile
+       dll/Makefile
+       echo/Makefile
+       envvar/Makefile
+       features/Makefile
+       filelist/Makefile
+       gettext/Makefile
+       headers/Makefile
+       hello/Makefile
+       includeonce/Makefile
+       isdefined/Makefile
+       library/Makefile
+       module/Makefile
+       paths/Makefile
+       pkgconfig/Makefile
+       pkgconfig/test.pc
+       pch/Makefile
+       regressions/Makefile
+       subproject/Makefile
+       subproject/subdir/Makefile
+       variants/Makefile
+     ])
+AC_OUTPUT

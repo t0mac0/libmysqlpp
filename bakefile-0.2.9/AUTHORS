@@ -1,0 +1,49 @@
+
+ Developers:
+-------------
+
+Vaclav Slavik <vslavik@fastmail.fm>
+Francesco Montorsi <f18m_cpp217828@yahoo.it>
+
+
+ Patches:
+----------
+
+Włodzimierz Skiba <abx@abx.art.pl>
+Artur Frysiak <wiget@users.sourceforge.net>
+Stefan Neis <Stefan.Neis@t-online.de>
+Greg Noel <GregNoel@users.sourceforge.net>
+Hans Van Leemputten <hansvl@users.sourceforge.net>
+David Elliott <dfe@cox.net>
+Vadim Zeitlin <vadim@wxwindows.org>
+Michael Wetherell <mike.wetherell@ntlworld.com>
+Warren Young <warren@etr-usa.com> (many manual changes)
+Dmitry Kononov <kdmix@fromru.com>
+Kevin Ollivier <kevino@theolliviers.com>
+Kevin Powell <KPowell@sirf.com>
+Steven Van Ingelgem <karel@linux.be>
+Anders F. Bjorklund <afb@algonet.se>
+Scott Bailey <scott_bailey@users.sourceforge.net>
+Aleksander Jaromin <olqjar@o2.pl>
+Zbigniew Zagórski <z.zagorski@gmail.com>
+Jiri Malak <malak.jiri@gmail.com>
+Stefan Csomor <csomor@advancedconcepts.ch>
+
+
+ Reused code:
+--------------
+
+Empy:                        by Erik Max Francis <software@alcyone.com> 
+                             http://www.alcyone.com/pyos/empy
+                             (LGPL)
+
+uuid module from Python 2.5
+(src/py25modules/uuid.py):   by Ka-Ping Yee <ping@zesty.ca>
+                             (Python license)
+
+macosx/buildpkg.py:          by Dinu C. Gherman
+                             (BSD)
+
+autoconf/dllar.sh,
+autoconf/bakefile-dllar.m4:  by Andrew Zabolotny, Stefan Neis
+                             (GPL)

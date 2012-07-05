@@ -1,0 +1,164 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2006-2007 Vaclav Slavik, Kevin Powell, Steven Van Ingelgem,
+                          Kevin Ollivier
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: msvc_prj_vcproj_common.bkl 1342 2010-07-30 15:40:33Z vaclavslavik $
+
+-->
+<makefile>
+    
+    <!-- code and settings shared by the "new", XML-based MSVC
+         project file formats -->
+     
+    <!-- ### templates with DSP-specific initialization of rules: ### -->
+
+    <template id="_compiled_baset_projtype" template="_compiled_baset">
+        <set var="_ldflags" overwrite="0"/> 
+        <set var="_ldlibs"/> 
+        <set var="_lib_paths"/>
+        <set var="_cppflags"/>
+        <set var="_optimize">0</set>
+        <set var="_warnings">default</set>
+        <set var="_defines" overwrite="0"/>
+        <set var="_res_defines" overwrite="0"/>
+        <set var="_include_paths"/>
+        <set var="_res_include_paths"/>
+
+        <_define-no-res>WIN32</_define-no-res>
+        <debug-runtime-libs>off</debug-runtime-libs>
+        <runtime-libs>dynamic</runtime-libs>
+        <threading>multi</threading>
+    </template>
+    
+    <template id="_dll_baset_projtype"/>
+    <template id="_lib_baset_projtype"/>
+    <template id="_exe_baset"/>
+    
+    <define-rule name="_compiled_specific"/>
+
+
+
+    <!-- ### include common MSVC projects code: ### -->
+    <include file="msvc_prj_common.bkl"/>
+
+
+    <!-- ### extensions of tags defined in msvc_prj_common.bkl for
+             vcproj formats: ### -->
+
+    <define-tag name="_define-no-res" rules="_compiled">
+        <set var="_defines">$(_defines);$(value.replace('"', '\\"'))</set>
+    </define-tag>
+        
+    <define-tag name="include" rules="_compiled">
+        <set var="_include_paths">$(_include_paths);$(nativePaths(value))</set>
+    </define-tag>
+    
+    <define-tag name="res-define" rules="_compiled">
+        <set var="_res_defines">$(_res_defines);$(value.replace('"', '\\"'))</set>
+    </define-tag>
+
+    <define-tag name="res-include" rules="_compiled">
+        <set var="_res_include_paths">$(_res_include_paths);$(nativePaths(value))</set>
+    </define-tag>
+    
+    <define-tag name="lib-path" rules="_compiled">
+        <set var="_lib_paths">$(_lib_paths);$(nativePaths(value))</set>
+    </define-tag>
+    
+    <define-tag name="optimize" rules="_compiled">
+        <set var="_optimize">
+            $(substituteFromDict(value,
+                {'off':'0', 'speed':'2', 'size':'1'}))
+        </set>
+    </define-tag>
+    
+    <define-tag name="warnings" rules="_compiled">
+        <set var="_warnings">$(value)</set>
+    </define-tag>
+    
+    <define-tag name="cxx-rtti" rules="_compiled">
+        <set var="_cxx_rtti">$(value)</set>
+    </define-tag>
+    <define-tag name="cxx-exceptions" rules="_compiled">
+        <set var="_cxx_exceptions">$(value)</set>
+    </define-tag>
+        
+
+
+    <!-- ======= FIXME: temporary measure: before all makefiles are converted
+                 from using __ to using _ prefix, we need version of
+                 msvc_common.bkl that uses _, included here -->
+    <!-- <include file="msvc_common.bkl"/> -->
+
+
+    <!-- some nontrivial settings shared by all msvc formats: -->
+
+    <define-tag name="runtime-libs" rules="exe,dll,module,lib">
+        <set var="_rtl_type">$(value)</set>
+    </define-tag>
+    <define-tag name="threading" rules="exe,dll,module,lib">
+        <set var="_rtl_threading">$(value)</set> <!-- single or multi -->
+    </define-tag>
+
+    <define-tag name="debug-runtime-libs" rules="exe,dll,module,lib">
+        <define>
+            $(substituteFromDict(value, {'on':'_DEBUG', 'off':''}))
+        </define>
+        <set var="_rtl_dbg">$(value)</set>
+    </define-tag>
+
+
+    <!-- precompiled headers: -->
+    <!-- (more things in makefile_defs_msvc.bkl and msvc6prj.bkl) -->
+    
+    <define-tag name="precomp-headers-header" rules="exe,dll,module,lib">
+        <set var="_pch_header">$(value)</set>
+    </define-tag>
+
+    <define-tag name="precomp-headers-gen" rules="exe,dll,module,lib">
+    </define-tag>
+    
+    <define-tag name="precomp-headers-file" rules="exe,dll,module,lib">
+        <set var="_pch_file">
+            $(formatIfNotEmpty('%s.pch', value))
+        </set>
+    </define-tag>
+    
+    <define-tag name="precomp-headers" rules="exe,dll,module,lib">
+        <set var="_precomp-headers">$(value)</set>
+    </define-tag>
+
+    
+    <!-- =============================================================== -->
+    <!--                   Compiler-specific tags:                       -->
+    <!-- =============================================================== -->
+    
+    <define-tag name="msvc-guid" rules="_compiled">
+        <set var="_msvc_guid">$(value)</set>
+    </define-tag>
+
+    <!-- ================ end of included msvc_common.bkl copy ========= -->
+
+</makefile>

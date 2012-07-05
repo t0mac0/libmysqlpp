@@ -1,0 +1,311 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2003-2007 Vaclav Slavik
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: common.bkl 1290 2009-02-26 22:32:00Z vaclavslavik $
+
+-->
+<makefile>
+
+    <include file="version.bkl"/>
+    <include file="dirs.bkl"/>
+    <include file="format_features.bkl"/>
+
+
+    <!-- Variables redefined in other (more specific) ruleset files: -->
+
+    <set var="PLATFORM_UNIX" overwrite="0">0</set>
+    <set var="PLATFORM_WIN32" overwrite="0">0</set>
+    <set var="PLATFORM_MSDOS" overwrite="0">0</set>
+    <set var="PLATFORM_MAC" overwrite="0">0</set>
+    <set var="PLATFORM_MACOSX" overwrite="0">0</set>
+    <set var="PLATFORM_OS2" overwrite="0">0</set>
+    <set var="PLATFORM_BEOS" overwrite="0">0</set>
+    <set var="PLATFORM_SYMBIAN" overwrite="0">0</set>
+
+    <define-rule name="compilation_rule">
+        <define-tag name="src">
+            <set var="src">$(findSources(value))</set>
+            <if cond="FORMAT=='mingw'">
+                <!--
+                A dirty hack neeeded because mingw's gcc-2.95 doesn't like
+                \ in filenames. We can't modify DIRSEP because rules not
+                used for C/C++ compilation need correct one:
+                -->
+                <set var="src">$(src.replace('\\','/'))</set>
+            </if>
+            <set var="__deps" append="1">$(src)</set>
+        </define-tag>
+        <define-tag name="dst">
+            <set var="__targetname">$(value)</set>
+        </define-tag>
+        <define-tag name="parent-target">
+            <set var="__parent">$(value)</set>
+        </define-tag>
+    </define-rule>
+
+
+
+    <!-- =============================================================== -->
+    <!--                  Common output generating logic:                -->
+    <!-- =============================================================== -->
+
+    <!-- Allow the user to redirect options to their own file
+         (but don't do it by default):
+         NB: these two are understood by bakefile Python code, don't
+             remove them - if you do, make sure you update src/*.py as well
+    -->
+    <set var="OPTIONS_FILE"/>
+    <set var="WRITE_OPTIONS_FILE">1</set>
+
+    <!--
+    This variable can be set to list make variables and options that can't
+    be eliminated in finalize.py even though they appear to be unused. The
+    only reason for its existence is that somebody may use <fragment>
+    that refers to a variable that is otherwise not used.
+    -->
+    <set var="VARS_DONT_ELIMINATE"/>
+
+
+    <!-- =============================================================== -->
+    <!--              Empty definitions of tags that need it:            -->
+    <!-- =============================================================== -->
+
+    <!-- empty compiler specific tags (redefined in format's rules): -->
+    <define-tag name="cppflags-borland" rules="exe,lib,dll,module"/>
+    <define-tag name="cppflags-unix" rules="exe,lib,dll,module"/>
+    <define-tag name="cppflags-mingw" rules="exe,lib,dll,module"/>
+    <define-tag name="cppflags-gcc" rules="exe,lib,dll,module"/>
+    <define-tag name="cppflags-msvc" rules="exe,lib,dll,module"/>
+    <define-tag name="cppflags-watcom" rules="exe,lib,dll,module"/>
+    <define-tag name="cppflags-dmars" rules="exe,lib,dll,module"/>
+
+    <define-tag name="cflags-borland" rules="exe,lib,dll,module"/>
+    <define-tag name="cflags-unix" rules="exe,lib,dll,module"/>
+    <define-tag name="cflags-mingw" rules="exe,lib,dll,module"/>
+    <define-tag name="cflags-gcc" rules="exe,lib,dll,module"/>
+    <define-tag name="cflags-msvc" rules="exe,lib,dll,module"/>
+    <define-tag name="cflags-watcom" rules="exe,lib,dll,module"/>
+    <define-tag name="cflags-dmars" rules="exe,lib,dll,module"/>
+
+    <define-tag name="cxxflags-borland" rules="exe,lib,dll,module"/>
+    <define-tag name="cxxflags-unix" rules="exe,lib,dll,module"/>
+    <define-tag name="cxxflags-mingw" rules="exe,lib,dll,module"/>
+    <define-tag name="cxxflags-gcc" rules="exe,lib,dll,module"/>
+    <define-tag name="cxxflags-msvc" rules="exe,lib,dll,module"/>
+    <define-tag name="cxxflags-watcom" rules="exe,lib,dll,module"/>
+    <define-tag name="cxxflags-dmars" rules="exe,lib,dll,module"/>
+
+    <define-tag name="ldflags-borland" rules="exe,dll,module"/>
+    <define-tag name="ldflags-unix" rules="exe,dll,module"/>
+    <define-tag name="ldflags-mingw" rules="exe,dll,module"/>
+    <define-tag name="ldflags-gcc" rules="exe,dll,module"/>
+    <define-tag name="ldflags-msvc" rules="exe,dll,module"/>
+    <define-tag name="ldflags-watcom" rules="exe,dll,module"/>
+    <define-tag name="ldflags-dmars" rules="exe,dll,module"/>
+
+    <define-tag name="uid" rules="exe,dll,module"/>
+    <define-tag name="msvc-guid" rules="exe,lib,dll,module"/>
+    <define-tag name="headers" rules="exe,lib,dll,module"/>
+    <define-tag name="install-to" rules="exe,lib,dll,module"/>
+    <define-tag name="install-headers-to" rules="exe,lib,dll,module"/>
+    <define-tag name="install-if" rules="exe,lib,dll,module"/>
+
+    <define-tag name="debug-info-edit-and-continue" rules="exe,lib,dll,module"/>
+
+
+    <!-- =============================================================== -->
+    <!--                     Common tags description:                    -->
+    <!-- =============================================================== -->
+
+    <!-- Exclusive tags: -->
+    <tag-info name="libname" exclusive="1"/>
+    <tag-info name="dllname" exclusive="1"/>
+    <tag-info name="exename" exclusive="1"/>
+    <tag-info name="version" exclusive="1"/>
+    <tag-info name="so_version" exclusive="1"/>
+    <tag-info name="mac_version" exclusive="1"/>
+    <tag-info name="dirname" exclusive="1"/>
+
+    <tag-info name="app-type" exclusive="1"/>
+    <tag-info name="debug-info" exclusive="1"/>
+    <tag-info name="debug-info-edit-and-continue" exclusive="1"/>
+    <tag-info name="debug-runtime-libs" exclusive="1"/>
+    <tag-info name="optimize" exclusive="1"/>
+    <tag-info name="arch" exclusive="1"/>
+    <tag-info name="threading" exclusive="1"/>
+    <tag-info name="warnings" exclusive="1"/>
+    <tag-info name="runtime-libs" exclusive="1"/>
+    <tag-info name="pic" exclusive="1"/>
+
+    <tag-info name="precomp-headers" exclusive="1"/>
+    <tag-info name="precomp-headers-file" exclusive="1"/>
+    <tag-info name="precomp-headers-header" exclusive="1"/>
+    <tag-info name="precomp-headers-location" exclusive="1"/>
+    <tag-info name="precomp-headers-gen" exclusive="1"/>
+
+    <tag-info name="cxx-rtti" exclusive="1"/>
+    <tag-info name="cxx-exceptions" exclusive="1"/>
+
+    <tag-info name="win32-res" exclusive="1"/>
+    <tag-info name="mac-res" exclusive="1"/>
+    <tag-info name="symbian-res" exclusive="1"/>
+
+    <tag-info name="install-to" exclusive="1"/>
+    <tag-info name="install-headers-to" exclusive="1"/>
+    <tag-info name="install-if" exclusive="1"/>
+    <tag-info name="installable" exclusive="1"/>
+
+    <define-tag name="stack" rules="exe"/>
+
+    <!-- Tag positions: -->
+    <tag-info name="res-include" 
+              position="before:win32-res,before:mac-res,before:symbian-res"/>
+    <tag-info name="res-define" 
+              position="before:win32-res,before:mac-res,before:symbian-res"/>
+
+
+
+    <!-- =============================================================== -->
+    <!--               "make install" and "make uninstall":              -->
+    <!-- =============================================================== -->
+
+    <template id="_installcmd">
+        <set var="__iprg">$(INSTALL_DATA)</set>
+        <set var="__uprg">$(UNINSTALL_DATA)</set>
+
+        <!-- the following variables must all use "native" path separators
+             only (i.e. they should have been filtered with nativePaths()).
+             
+             Also note that the __*dir vars should never end with a path
+             separator.
+
+             NOTE: the $(SRCDIR) variable always contain a path with Unix-style 
+                   path separators and thus must be nativePaths-filtered!
+        -->
+        <set var="__srcdir">$(nativePaths(SRCDIR))</set>
+        <set var="__dstdir"/>
+        <set var="__files"/>
+
+        <!--
+          DigitalMars' smake has problems with long command lines, so we
+          have to work around it. More details here:
+          http://sourceforge.net/mailarchive/message.php?msg_id=9595825
+          -->
+        <if cond="TOOLSET=='win32' and FORMAT=='dmars_smake'">
+            <set var="__copy_depends" eval="0">
+                $(''.join(['$(__srcdir)\%s ' % (x) for x in __files.split()]))
+            </set>
+            <set var="__deps" append="1">$(__copy_depends)</set>
+            <set var="__copy_script_name">$(FORMAT)_copy_$(id).bat</set>
+        </if>
+            
+            
+        <!-- INSTALL COMMANDS -->
+
+        <set var="__install_cmd" eval="0">
+            <if cond="TOOLSET=='unix'">
+                $(INSTALL_DIR) $(__dstdir)
+                (cd $(__srcdir) ; $(__iprg) $(__files) $(__dstdir))
+            </if>
+            <if cond="TOOLSET=='win32'">
+                $(INSTALL_DIR) $(__dstdir)
+                ( cd $(__srcdir) &amp;&amp; $(__iprg) $(__files) $(__dstdir) )
+            </if>
+        </set>
+        <set var="__install_cmd_preservetree" eval="0">
+            <if cond="TOOLSET=='unix'">
+                $(INSTALL_DIR) $(__dstdir)
+                for f in $(__files); do \
+                    if test ! -d $(__dstdir)/`dirname $(DOLLAR)$(DOLLAR)f` ; then \
+                        $(INSTALL_DIR) $(__dstdir)/`dirname $(DOLLAR)$(DOLLAR)f`; \
+                    fi; \
+                    $(__iprg) $(__srcdir)/$(DOLLAR)$(DOLLAR)f $(__dstdir)/$(DOLLAR)$(DOLLAR)f; \
+                done
+            </if>
+    
+            <!-- because of all win32/dos shell limitations we are forced to write
+                 a 'mkdir' command for any directory in the given __files list 
+                 (because we need to preserve directory tree and thus handle the 
+                 directories eventually specified as part of __files paths) and a 
+                 'copy' command for each file in __files list...
+                 
+                 WARNING: we must be careful NOT to end any of these commands with the
+                          Windows path separator \ otherwise some MAKE programs will
+                          interpret them as continuation characters joining the next
+                          line of the makefile resulting in an error!
+                          This is accomplished through dirName() function.
+            -->
+            <if cond="TOOLSET in ['win32','os2','dos']">
+                if not exist $(__dstdir) mkdir $(__dstdir)
+                $('\n'.join(                                                                 \
+                            [('if not exist %s\%s mkdir %s\%s' % (__dstdir, x, __dstdir, x)) \
+                             for x in getDirsFromList(__files).split()]                      \
+                            ))
+                $('\n'.join(                                                                 \
+                      [('copy %s %s' %                                                       \
+                          (normPath(joinPaths(__srcdir, x)),                                 \
+                           normPath(joinPaths(__dstdir, dirName(x)))                         \
+                          ))                                                                 \
+                       for x in __files.split()]                                             \
+                 ))
+            </if>
+        </set>
+        
+        
+        <!-- UNINSTALL COMMANDS -->
+    
+        <set var="__uninstall_cmd_preservetree" eval="0">
+            <if cond="TOOLSET=='unix'">
+                for f in $(__files); do \
+                    $(__uprg) $(__dstdir)/$(DOLLAR)$(DOLLAR)f; \
+                done
+            </if>
+            <if cond="TOOLSET=='win32'">
+                <!-- in case __files is a list of files, we split all the tokens of the
+                     list and create single clean commands -->
+                $('\n'.join([('-if exist %s\%s %s %s\%s' % (__dstdir, x, __uprg, __dstdir, x)) \
+                  for x in safeSplit(__files)]))
+            </if>
+        </set>
+        <set var="__uninstall_cmd" eval="0">
+            <if cond="TOOLSET=='unix'">
+
+                <!-- the following os.path.basename is safe also when generating Unix formats
+                     from a Windows system because on Windows the os.path.* functions understand
+                     both the Windows path and the Unix paths: -->
+                $('(cd %s ; %s %s)' % (__dstdir, __uprg, ' '.join([os.path.basename(x) \
+                  for x in safeSplit(__files)])))
+            </if>
+            <if cond="TOOLSET=='win32'">
+                <!-- in case __files is a list of files, we split all the tokens of the
+                     list and create single clean commands -->
+                $('\n'.join([('-if exist %s\%s %s %s' % (__dstdir, x, __uprg, x)) \
+                  for x in safeSplit(__files)]))
+            </if>
+        </set> 
+    </template>
+
+
+</makefile>

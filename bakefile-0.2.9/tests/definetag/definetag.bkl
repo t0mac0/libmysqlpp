@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+
+<makefile>
+
+    <!-- test <define-tag> when used inside rules -->
+
+    <define-tag name="ruletag" rules="exe">
+        <sources>$(attributes['a']) $(value)</sources>
+    </define-tag>
+
+    <exe id="test1">
+        <ruletag a="source1.c">source2.c</ruletag>
+    </exe>
+
+</makefile>

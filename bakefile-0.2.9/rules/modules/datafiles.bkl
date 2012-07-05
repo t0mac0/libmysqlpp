@@ -1,0 +1,275 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2003-2007 Vaclav Slavik
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: datafiles.bkl 1151 2008-01-06 10:41:27Z vaclavslavik $
+
+  1) Declaration of data files for the purpose of installing them with
+     "make install".
+
+  2) Copies file(s) specified with <src> tag to either file specified with
+     <destfile> or to directory set with <destdir> (will be created if
+     it doesn't exist).
+
+-->
+<makefile>
+
+    <!-- Copy files to flat destination directory, i.e. do *not* preserve
+         directory tree: -->
+
+    <define-rule name="__data-files-base">
+        <template template="_installcmd">
+            <set var="__iprg">$(INSTALL_DATA)</set>
+            <set var="__uprg">$(UNINSTALL_DATA)</set>
+            <set var="__files"/>
+            <set var="__copy_cmd" eval="0">$(__install_cmd)</set>
+            <set var="__remove_cmd" eval="0">$(__uninstall_cmd)</set>
+        </template>
+        <define-tag name="install-to">
+            <if cond="FORMAT_HAS_MAKE_INSTALL=='1'">
+                <set var="__dstdir">$(DESTDIR)$(nativePaths(value))</set>
+            </if>
+        </define-tag>
+        <define-tag name="srcdir">
+            <if cond="FORMAT_HAS_MAKE_INSTALL=='1'">
+                <set var="__srcdir">$(nativePaths(value))</set>
+            </if>
+        </define-tag>
+        <define-tag name="files">
+            <set var="__files" append="1">$(' '.join(nativePaths(value).split()))</set>
+        </define-tag>
+    </define-rule>
+
+    <define-rule name="data-files" pseudo="1" extends="__data-files-base">
+        <template>
+            <if cond="FORMAT_HAS_MAKE_INSTALL=='1'">
+                <modify-target target="install">
+                    <command>$(ref('__copy_cmd',id))</command>
+                </modify-target>
+                <modify-target target="uninstall">
+                    <command>$(ref('__remove_cmd',id))</command>
+                </modify-target>
+            </if>
+        </template>
+    </define-rule>
+
+    <define-rule name="data-files-tg" extends="action,__data-files-base">
+        <template>
+            <if cond="FORMAT_HAS_MAKE_INSTALL=='1'">
+                <dependency-of>install</dependency-of>
+                <command>$(__copy_cmd)</command>
+            </if>
+        </template>
+    </define-rule>
+
+    <define-rule name="script-files" extends="data-files" pseudo="1">
+        <template>
+            <set var="__iprg">$(INSTALL_PROGRAM)</set>
+        </template>
+    </define-rule>
+
+    <define-rule name="script-files-tg" extends="data-files-tg">
+        <template>
+            <set var="__iprg">$(INSTALL_PROGRAM)</set>
+        </template>
+    </define-rule>
+
+
+    <!-- Copy files while preserving their directory structure: -->
+
+    <define-rule name="data-files-tree" pseudo="1">
+        <template template="_installcmd">
+            <set var="__iprg">$(INSTALL_DATA)</set>
+            <set var="__uprg">$(UNINSTALL_DATA)</set>
+            <set var="__copy_cmd" eval="0">$(__install_cmd_preservetree)</set>
+            <set var="__remove_cmd" eval="0">$(__uninstall_cmd_preservetree)</set>
+
+            <if cond="FORMAT_HAS_MAKE_INSTALL=='1'">
+                <modify-target target="install">
+                    <command>$(ref('__copy_cmd',id))</command>
+                </modify-target>
+                <modify-target target="uninstall">
+                    <command>$(ref('__remove_cmd',id))</command>
+                </modify-target>
+            </if>
+        </template>
+        <define-tag name="install-to">
+            <if cond="FORMAT_HAS_MAKE_INSTALL=='1'">
+                <set var="__dstdir">$(DESTDIR)$(nativePaths(value))</set>
+            </if>
+        </define-tag>
+        <define-tag name="srcdir">
+            <if cond="FORMAT_HAS_MAKE_INSTALL=='1'">
+                <set var="__srcdir">$(nativePaths(value))</set>
+            </if>
+        </define-tag>
+        <define-tag name="files">
+            <set var="__files">$(' '.join(nativePaths(value).split()))</set>
+        </define-tag>
+    </define-rule>
+
+
+
+
+
+
+    <!-- Copying files around as part of the build process:
+         NOTE: these rules do not modify 'install' or 'uninstall' targets -->
+
+    <define-rule name="copy-files" extends="action">
+        <template>
+            <is-phony/>
+            <set var="__srcdir">$(nativePaths(SRCDIR))</set>
+
+            <!--
+              DigitalMars' smake has problems with long command lines, so we
+              have to work around it. More details here:
+              http://sourceforge.net/mailarchive/message.php?msg_id=9595825
+              -->
+            <if cond="TOOLSET=='win32' and FORMAT=='dmars_smake'">
+                <set var="__copy_depends" eval="0">
+                    $(''.join(['$(__srcdir)%s ' % (x) for x in __files.split()]))
+                </set>
+                <set var="__deps" append="1">$(__copy_depends)</set>
+                <set var="__copy_script_name">$(FORMAT)_copy_$(id).bat</set>
+            </if>
+
+            <set var="__copy_cmd" eval="0">
+
+                <if cond="TOOLSET=='unix'">
+                    @mkdir -p $(__dstdir)
+                    @for f in $(__files); do \
+                        if test ! -f $(__dstdir)/$(DOLLAR)$(DOLLAR)f -a ! -d $(__dstdir)/$(DOLLAR)$(DOLLAR)f ; \
+                        then x=yep ; \
+                        else x=`find $(__srcdir)$(DOLLAR)$(DOLLAR)f -newer $(__dstdir)/$(DOLLAR)$(DOLLAR)f -print` ; \
+                        fi; \
+                        case "$(DOLLAR)$(DOLLAR)x" in ?*) \
+                            cp -pRf $(__srcdir)$(DOLLAR)$(DOLLAR)f $(__dstdir) ;; \
+                        esac; \
+                    done
+                </if>
+
+                <if cond="TOOLSET in ['win32','os2','dos'] and FORMAT!='mingw' and FORMAT!='dmars_smake'">
+                    if not exist $(__dstdir) mkdir $(__dstdir)
+                    for %f in ($(__files)) do if not exist $(__dstdir)\%f copy $(__srcdir)%f $(__dstdir)
+                </if>
+                <if cond="TOOLSET=='win32' and FORMAT=='dmars_smake'">
+                    if not exist $(__dstdir) mkdir $(__dstdir)
+                    echo copy $(__srcdir)%%1 $(__dstdir)\%%1 &gt; $(__copy_script_name)
+                    !$(__copy_script_name) $**
+                    del $(__copy_script_name)
+                </if>
+                <if cond="TOOLSET=='win32' and FORMAT=='mingw'">
+                    if not exist $(__dstdir) mkdir $(__dstdir)
+                    for %%f in ($(__files)) do if not exist $(__dstdir)\%%f copy $(__srcdir)%%f $(__dstdir)
+                </if>
+
+            </set>
+            <command>$(__copy_cmd)</command>
+        </template>
+        <define-tag name="dstdir">
+            <set var="__dstdir">$(nativePaths(value))</set>
+        </define-tag>
+        <define-tag name="srcdir">
+            <set var="__srcdir">$(nativePaths(value))$(DIRSEP)</set>
+        </define-tag>
+        <define-tag name="files">
+            <set var="__files">$(' '.join(value.split()))</set>
+        </define-tag>
+    </define-rule>
+
+    <define-rule name="copy-file-to-file" extends="action">
+        <template>
+            <set var="__copy_cmd" eval="0">
+                <if cond="TOOLSET=='unix'">
+                    cp -pf $(__file) $(__dest)
+                </if>
+                <if cond="TOOLSET in ['win32','os2','dos']">
+                    copy $(__file) $(__dest)
+                </if>
+            </set>
+            <command>$(__copy_cmd)</command>
+        </template>
+        <define-tag name="dst">
+            <set var="__dest">$(nativePaths(value))</set>
+            <set var="__targetname">$(__dest)</set>
+        </define-tag>
+        <define-tag name="src">
+            <set var="__file">$(nativePaths(value))</set>
+            <depends-on-file>$(value)</depends-on-file>
+        </define-tag>
+    </define-rule>
+
+    <define-rule name="copy-file-to-file-if-not-exist" extends="action">
+        <template>
+            <set var="__copy_cmd" eval="0">
+                <if cond="TOOLSET=='unix'">
+                    @if test ! -s $(__dest) ; then \
+                        cp -pf $(__file) $(__dest)
+                    fi; \
+                </if>
+                <if cond="TOOLSET in ['win32','os2','dos']">
+                    if not exist $(__dest) copy $(__file) $(__dest)
+                </if>
+            </set>
+            <command>$(__copy_cmd)</command>
+        </template>
+        <define-tag name="dst">
+            <set var="__dest">$(nativePaths(value))</set>
+            <set var="__targetname">$(__dest)</set>
+        </define-tag>
+        <define-tag name="src">
+            <set var="__file">$(nativePaths(value))</set>
+        </define-tag>
+    </define-rule>
+
+
+    <define-rule name="mkdir" extends="action">
+        <define-tag name="dir">
+            <set var="__targetname">$(nativePaths(value))</set>
+            <command cond="TOOLSET=='unix'">
+                @mkdir -p $(__targetname)
+            </command>
+            <command cond="TOOLSET in ['win32','os2','dos']">
+                if not exist $(__targetname) mkdir $(__targetname)
+            </command>
+        </define-tag>
+    </define-rule>
+
+
+    <!-- FIXME: DEPRECATED
+         deprecated stuff (will be removed in future versions): -->
+
+    <!-- Convenience rule for C/C++ header files to be installed: -->
+    <define-rule name="headers" extends="data-files-tree" pseudo="1"> 	 
+        <template> 	 
+            <warning>
+                &lt;headers&gt; rule is deprecated and will be removed, use per-target &lt;headers&gt; tag instead.
+            </warning>
+            <srcdir>$(SRCDIR)</srcdir> 	 
+            <install-to>$(INCLUDEDIR)</install-to> 	 
+        </template> 	 
+    </define-rule>
+
+</makefile>

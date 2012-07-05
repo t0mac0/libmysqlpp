@@ -1,0 +1,80 @@
+@#
+@#  This file is part of Bakefile (http://www.bakefile.org)
+@#
+@#  Copyright (C) 2003-2007 Vaclav Slavik
+@#
+@#  Permission is hereby granted, free of charge, to any person obtaining a
+@#  copy of this software and associated documentation files (the "Software"),
+@#  to deal in the Software without restriction, including without limitation
+@#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+@#  and/or sell copies of the Software, and to permit persons to whom the
+@#  Software is furnished to do so, subject to the following conditions:
+@#
+@#  The above copyright notice and this permission notice shall be included in
+@#  all copies or substantial portions of the Software.
+@#
+@#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+@#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+@#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+@#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+@#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+@#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+@#  DEALINGS IN THE SOFTWARE.
+@#
+@#  $Id: autoconf.empy 1189 2008-01-27 17:47:55Z vaclavslavik $
+@#
+@empy.include(os.path.join(RULESDIR, '_hdr_makefile.empy'))
+
+@@MAKE_SET@@
+
+@{
+specialOptions = ['prefix', 'exec_prefix', 'datarootdir', 'INSTALL']
+normalOptions = [x for x in options if x.name not in specialOptions]
+}@
+@[for o in specialOptions]@
+@o = @@@o@@
+@[end for]@
+@[for o in normalOptions]@
+@o.name = @@@o.name@@
+@[end for]@
+
+### Variables: ###
+
+@[for v in make_vars]@
+@utils.wrapLongLine('%s = ' % v.name, v.value, ' \\', variable=v.name)
+@[end for]@
+
+### Conditionally set variables: ###
+
+@[for c in cond_vars]@
+@[for v in c.values]@
+@[if len(v.value) < 75]@
+@utils.wrapLongLine('@COND_%s@%s = ' % (v.cond.name, c.name), v.value, ' \\', indent='@COND_%s@\t' % v.cond.name, variable=v.cond.name)
+@[end if]@
+@[if len(v.value) >= 75]@
+@utils.wrapLongLine('COND_%s_%s = ' % (v.cond.name, c.name), v.value, ' \\', variable=c.name)
+@@COND_@v.cond.name@@@c.name = $(COND_@(v.cond.name)_@c.name)
+@[end if]@
+@[end for]@
+@[end for]@
+
+### Targets: ###
+@[for t in targets]
+@{
+if t.cond == None: condstr=''
+else: condstr='@COND_%s@' % t.cond.name
+}@
+@condstr@t.__targetdir@t.__targetname: @t.__deps
+@[for cmd in t.__command.splitlines()]@
+@condstr@\t@cmd.strip()
+@[end for]@
+@[end for]@
+
+@[for f in fragments]
+@f.content
+@[end for]@
+
+# Include dependency info, if present:
+@@IF_GNU_MAKE@@-include @BUILDDIR/.deps/*.d
+
+@utils.wrapLongLine('.PHONY: ', ' '.join([t.__targetdir+t.__targetname for t in targets if t.__is_phony=='1']), ' \\')

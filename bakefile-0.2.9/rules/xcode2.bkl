@@ -1,0 +1,343 @@
+<?xml version="1.0" ?>
+<!--
+
+  This file is part of Bakefile (http://www.bakefile.org)
+
+  Copyright (C) 2005-2007 David F. Elliott, Kevin Ollivier
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+  $Id: xcode2.bkl 1259 2008-09-23 07:47:44Z vaclavslavik $
+
+-->
+<makefile>
+    <option name="INSTALL">
+        <default-value>install</default-value>
+        <description>'install' program location</description>
+    </option>
+    <set var="COMPILER">gcc</set>
+    <set var="TOOLSET">unix</set>
+    <set var="EOL_STYLE">unix</set>
+    <include file="makefile_defs_unix.bkl"/>
+    <set var="PLATFORM_MAC">1</set>
+    <set var="PLATFORM_MACOSX">1</set>
+    <set var="FORMAT_SUPPORTS_CONDITIONS">0</set>
+    <set var="FORMAT_HAS_MAKE_INSTALL">0</set>
+    <set var="FORMAT_SUPPORTS_ACTIONS">1</set>
+    <set var="FORMAT_SUPPORTS_SUBPROJECTS">0</set>  <!-- FIXME: is this true? -->
+
+    <!-- =============================================================== -->
+    <!--                       Compiler options:                         -->
+    <!-- =============================================================== -->
+
+    <option name="CC">
+        <default-value>$(__DEFAULT_CC)</default-value>
+        <description>
+            C compiler
+        </description>
+    </option>
+    <option name="CXX">
+        <default-value>$(__DEFAULT_CXX)</default-value>
+        <description>
+            C++ compiler
+        </description>
+    </option>
+    <option name="CFLAGS">
+        <default-value>$(__DEFAULT_CFLAGS)</default-value>
+        <description>
+            Standard flags for CC
+        </description>
+    </option>
+    <option name="CXXFLAGS">
+        <default-value>$(__DEFAULT_CXXFLAGS)</default-value>
+        <description>
+            Standard flags for C++
+        </description>
+    </option>
+    <option name="CPPFLAGS">
+        <default-value>$(__DEFAULT_CPPFLAGS)</default-value>
+        <description>
+            Standard preprocessor flags (common for CC and CXX)
+        </description>
+    </option>
+    <option name="LDFLAGS">
+        <default-value>$(__DEFAULT_LDFLAGS)</default-value>
+        <description>
+            Standard linker flags
+        </description>
+    </option>
+
+    <!-- =============================================================== -->
+    <!--                     Rules & tags definitions:                   -->
+    <!-- =============================================================== -->
+
+    <define-rule name="__any">
+        <template>
+            <set var="_targetname">$(id)</set>
+            <set var="_sources"/>
+            <set var="_headers"/>
+        </template>
+        <define-tag name="dependency-of">
+            <modify-target target="$(value)">
+                <depends>$(id)</depends>
+            </modify-target>
+        </define-tag>
+        <define-tag name="depends">
+            <if cond="_kind!='binary_product'">
+                <warning>
+                    dependencies not implemented for this type of targets in Xcode format
+                </warning>
+            </if>
+        </define-tag>
+        <define-tag name="depends-on-file">
+            <warning>
+                &lt;depends-on-file&gt; not implemented for Xcode
+            </warning>
+        </define-tag>
+    </define-rule>
+    <define-rule name="phony" extends="__any">
+        <template>
+            <set var="_kind">phony</set>
+        </template>
+    </define-rule>
+    <define-rule name="action" extends="__any">
+        <template>
+            <set var="_kind">action</set>
+            <set var="_commands"/>
+        </template>
+        <define-tag name="command">
+            <set var="_commands" append="1">$(value)\n</set>
+        </define-tag>
+        <define-tag name="is-phony" />
+    </define-rule>
+    <define-rule name="subproject" extends="action">
+        <template>
+            <set var="_kind">aggregate_dependency</set>
+        </template>
+        <define-tag name="dir" />
+        <define-tag name="installable" />
+        <define-tag name="target" />
+    </define-rule>
+
+    <define-rule name="__compiled" extends="__any">
+        <template>
+            <set var="_kind">binary_product</set>
+            <set var="_xcode_target_group"/>
+            <set var="_defines"/>
+            <set var="_includes"/>
+            <set var="_cxx_rtti"/>
+            <set var="_cxx_exceptions"/>
+            <set var="_debug_info"/>
+            <set var="_optimize"/>
+            <set var="_cflags"/>
+            <set var="_cxxflags"/>
+            <set var="_lib_path"/>
+            <set var="_sys_libs"/>
+            <set var="_warnings"/>
+            <set var="_ldlibs"/>
+            <set var="_ldflags"/>
+            <set var="_pic"/>
+            <set var="_dirname"/>
+            <set var="_productname"/>
+            <set var="_deps"/>
+            <set var="_use_pch"/>
+            <set var="_pch_header"/>
+            <set var="_macvercur"/>
+            <set var="_macvercompat"/>
+            <set var="_postlink_command"/>
+        </template>
+        <define-tag name="debug-info">
+            <set var="_debug_info">$(value)</set>
+        </define-tag>
+        <define-tag name="debug-runtime-libs"/>
+        <define-tag name="optimize">
+            <set var="_optimize">$(value)</set>
+        </define-tag>
+        <define-tag name="threading" />
+        <define-tag name="runtime-libs" />
+        <define-tag name="cxx-rtti">
+            <set var="_cxx_rtti">$(value)</set>
+        </define-tag>
+        <define-tag name="cxx-exceptions">
+            <set var="_cxx_exceptions">$(value)</set>
+        </define-tag>
+        <define-tag name="cflags">
+            <set var="_cflags" append="1">$(value)</set>
+        </define-tag>
+        <define-tag name="cxxflags">
+            <set var="_cxxflags" append="1">$(value)</set>
+        </define-tag>
+        <!-- 
+             I couldn't find any Xcode setting for CPPFLAGS, the closest it has
+             is GCC_PREPROCESSOR_DEFINITIONS, but that assumes each item is a define.
+             Is this an appropriate solution, or should we look at other routes? 
+        -->
+        <define-tag name="cppflags">
+            <cflags>$(value)</cflags>
+            <cxxflags>$(value)</cxxflags>
+        </define-tag>
+        <define-tag name="define">
+            <set var="_defines" append="1">$(value)</set>
+        </define-tag>
+        <define-tag name="dirname">
+            <set var="_dirname">$(value)</set>
+        </define-tag>
+        <define-tag name="install-to" />
+        <define-tag name="install-if" />
+        <define-tag name="pic">
+            <set var="_pic">$(value)</set>
+        </define-tag>
+        <define-tag name="include">
+            <set var="_includes" append="1">$(value)</set>
+        </define-tag>
+        <define-tag name="sources">
+            <set var="_sources" append="1">$(value)</set>
+        </define-tag>
+        <define-tag name="headers">
+            <set var="_headers" append="1">$(value)</set>
+        </define-tag>
+        <define-tag name="lib-path">
+            <set var="_lib_path" append="1">$(value)</set>
+        </define-tag>
+        <define-tag name="warnings">
+            <set var="_warnings">$(value)</set>
+        </define-tag>
+        <define-tag name="sys-lib">
+            <ldlibs>-l$(value)</ldlibs>
+        </define-tag>
+        <define-tag name="ldlibs">
+            <set var="_ldlibs" append="1">$(value)</set>
+        </define-tag>
+        <define-tag name="ldflags">
+            <set var="_ldflags" append="1">$(value)</set>
+        </define-tag>
+        <define-tag name="depends">
+            <set var="_deps" append="1">$(value)</set>
+        </define-tag>
+        <define-tag name="library">
+            <depends>$(value)</depends>
+            <ldlibs>
+                $(substitute(value,
+                  lambda x: ref('_dirname',x)+'/'+ref('_linkname', x),
+                             'LIBR'))
+            </ldlibs>
+        </define-tag>
+        <define-tag name="postlink-command">
+            <set var="_postlink_command">$(value)</set>
+        </define-tag>
+
+
+        <define-tag name="precomp-headers">
+            <set var="_use_pch">$(value)</set>
+        </define-tag>
+
+        <define-tag name="precomp-headers-header">
+            <set var="_pch_header">$(value)</set>
+        </define-tag>
+
+        <!-- NB: AFAICT, Xcode doesn't give fine-tuned control over PCH,
+             so I'm not sure we can implement these settings. -->
+        <define-tag name="precomp-headers-location"/>
+        <define-tag name="precomp-headers-file"/>
+        <define-tag name="precomp-headers-gen"/>
+        <define-tag name="precomp-headers-exclude"/>
+
+        <define-tag name="res-define"/>
+        <define-tag name="res-include"/>
+        
+    </define-rule>
+
+    <define-rule name="_dll" extends="__compiled">
+        <template>
+            <set var="_productType">com.apple.product-type.library.dynamic</set>
+            <set var="_explicitFileType">compiled.mach-o.dylib</set>
+            <dllname>$(id)</dllname>
+        </template>
+    </define-rule>
+    <define-rule name="dll" extends="_dll">
+        <template>
+            <dllname>$(id)</dllname>
+        </template>
+        <define-tag name="dllname">
+            <set var="_productname">lib$(value)</set>
+            <set var="_linkname">lib$(value).dylib</set>
+        </define-tag>
+        <define-tag name="libname">
+            <!-- can't use libname!=dllname on this platform -->
+        </define-tag>
+        <define-tag name="version"/>
+        <define-tag name="so_version"/>
+        <define-tag name="mac_version">
+            <set var="_macvercur">$(value)</set>
+            <set var="_macvercompat">$('.'.join(value.split('.')[0:2]))</set>
+        </define-tag>
+    </define-rule>
+    <define-rule name="module" extends="_dll">
+        <template/>
+        <define-tag name="dllname">
+            <set var="_productname">$(value)</set>
+        </define-tag>
+    </define-rule>
+    <define-rule name="lib" extends="__compiled">
+        <template>
+            <set var="_productType">com.apple.product-type.library.static</set>
+            <set var="_explicitFileType">archive.ar</set>
+            <libname>$(id)</libname>
+        </template>
+        <define-tag name="libname">
+            <set var="_productname">$(value)</set>
+            <set var="_linkname">lib$(value).a</set>
+        </define-tag>
+    </define-rule>
+    <define-rule name="exe" extends="__compiled">
+        <template>
+            <exename>$(id)</exename>
+            <app-type>console</app-type>
+        </template>
+        <define-tag name="app-type">
+            <set var="_productType">
+                $(substituteFromDict(value,
+                {'console':'com.apple.product-type.tool',
+                 'gui':'com.apple.product-type.application'}))
+            </set>
+            <set var="_explicitFileType">
+                $(substituteFromDict(value,
+                {'console':'compiled.mach-o.executable',
+                 'gui':'wrapper.application'}))
+            </set>
+        </define-tag>
+        <define-tag name="exename">
+            <set var="_productname">$(value)</set>
+            <set var="_exename">$(value)</set>
+        </define-tag>
+    </define-rule>
+
+    <phony id="all" category="all" />
+
+    <!-- =============================================================== -->
+    <!--                      resources:                                 -->
+    <!-- =============================================================== -->
+
+    <!-- do nothing by default: -->
+    <define-tag name="win32-res" rules="exe,dll,module"/>
+    <define-tag name="mac-res" rules="exe,dll,module"/>
+    <define-tag name="symbian-res" rules="exe,dll,module"/>
+    
+    <output file="$(OUTPUT_FILE)" writer="xcode2.py" />
+</makefile>

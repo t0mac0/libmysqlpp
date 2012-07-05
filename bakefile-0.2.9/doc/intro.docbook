@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!-- $Id: intro.docbook 1185 2008-01-21 22:32:34Z vaclavslavik $ -->
+
+<chapter id="ch.intro">
+  <title>Introduction</title>
+
+  <para>
+    FIXME - to be written
+    <!-- FEATURES LIST -->
+  </para>
+
+  <section id="sec.flow">
+    <title>Flow</title>
+    <para>
+      FIXME: XML makefile -> ruleset -> variables expansion ->
+             output writer
+    </para>
+  </section>
+
+</chapter>

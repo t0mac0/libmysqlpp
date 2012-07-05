@@ -1,0 +1,733 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!-- $Id: variables.docbook 1292 2009-03-02 13:44:53Z vaclavslavik $ -->
+
+<chapter id="ch.variables">
+  <title>Variables defined by Bakefile</title>
+  <para>
+    Bakefile rulesets define lots of variables; this chapter provides brief
+    summary of variables that are available for makefile writers.
+  </para>
+
+  <section id="sec.noformat.vars">
+    <title>Format independent variables</title>
+
+    <!-- =============================================================== -->
+    <!--                   Changing Bakefile behaviour                   -->
+    <!-- =============================================================== -->
+
+    <section id="sec.change.bkl.behavior">
+      <title>Changing Bakefile behaviour</title>
+      <para>
+        These variables are meant to be changed using <literal>-D</literal>
+        command line argument
+        (see <link linkend="man.bakefile">manual page</link> for details).
+        <informaltable>
+          <tgroup cols='3'>
+            <thead>
+              <row>
+                <entry>Variable name</entry>
+                <entry>Description</entry>
+                <entry>Default</entry>
+              </row>
+            </thead>
+            <tbody>
+
+              <row id="var.OPTIONS_FILE">
+                <entry role="varname">OPTIONS_FILE</entry>
+                <entry>
+                  If set, then user-configurable part of generated makefile
+                  (i.e. <link linkend="concept.option">options</link> list)
+                  is written into another file instead that the makefile will
+                  include. <varname>OPTIONS_FILE</varname> value must be
+                  relative to <varname>OUTPUT_FILE</varname>.
+                </entry>
+                <entry role="default">(not set, empty)</entry>
+              </row>
+
+              <row>
+                <entry role="varname">WRITE_OPTIONS_FILE</entry>
+                <entry>
+                  If <varname>OPTIONS_FILE</varname> is set and
+                  <varname>WRITE_OPTIONS_FILE</varname> is 1, then
+                  file <varname>OPTIONS_FILE</varname> is created. If 0, then
+                  it is not, but it is still included by the main makefile.
+                  This allows you to generate options file shared by lots of
+                  subproject makefiles and don't repeatedly generate it.
+                </entry>
+                <entry role="default">1</entry>
+              </row>
+
+            </tbody>
+          </tgroup>
+        </informaltable>
+
+        Variables for fine-tuning Bakefile's output (rarely needed):
+        <informaltable>
+          <tgroup cols='3'>
+            <thead>
+              <row>
+                <entry>Variable name</entry>
+                <entry>Description</entry>
+                <entry>Default</entry>
+              </row>
+            </thead>
+            <tbody>
+
+              <row id="var.VARS_DONT_ELIMINATE">
+                <entry role="varname">VARS_DONT_ELIMINATE</entry>
+                <entry>
+                  Bakefile normally eliminates all unused variables from
+                  the output. In some rare situations, it may not detect
+                  that a variable is used, in which case you can tell it to
+                  keep the variable by adding its name to this variable.
+                  So far this is only useful if the variables is used in
+                  makefile code included using <xref linkend="cmd.fragment"/>.
+                </entry>
+                <entry role="default">(empty)</entry>
+              </row>
+
+              <row id="var.LIB_PAGESIZE">
+                <entry role="varname">LIB_PAGESIZE</entry>
+                <entry>
+                  Set this variable to a large power of two if your linker
+                  (on Windows) complains that page size is too small when
+                  building static library.
+                </entry>
+                <entry role="default"><literal>4096</literal></entry>
+              </row>
+
+            </tbody>
+          </tgroup>
+        </informaltable>
+
+      </para>
+    </section>
+
+
+    <!-- =============================================================== -->
+    <!--                        Directories                              -->
+    <!-- =============================================================== -->
+
+    <section id="sec.dirs">
+      <title>Directories</title>
+
+      <para>
+        <informaltable>
+          <tgroup cols='3'>
+            <thead>
+              <row>
+                <entry>Variable name</entry>
+                <entry>Description</entry>
+                <entry>Default</entry>
+              </row>
+            </thead>
+            <tbody>
+
+              <row>
+                <entry id="var.SRCDIR" xreflabel="SRCDIR" role="varname">SRCDIR</entry>
+                <entry>
+                  <para>
+                    Directory to which names of source files are relative to.
+                    This value is relative to <xref linkend="var.OUTPUT_FILE"/>
+                    (the only exception is the <literal>autoconf</literal>
+                    format, which prefixes the value with
+                    <literal>$(srcdir)</literal> in order to allow out-of-tree
+                    compilation).
+                  </para>
+                  <para>
+                    Note that the value of <varname>SRCDIR</varname>
+                    <emphasis>cannot</emphasis> be set manually; if you want
+                    to change it, you must use the
+                    <command>set-srcdir</command> command as early in your
+                    bakefile as possible. For example:
+                    <programlisting><![CDATA[
+<makefile>
+  <set-srcdir>../..</set-srcdir>
+  ..
+</makefile>
+]]></programlisting>
+                    The argument to <command>set-srcdir</command> must be
+                    a constant expression.
+                  </para>
+                </entry>
+                <entry role="default">.</entry>
+              </row>
+
+              <row>
+                <entry id="var.BUILDDIR" xreflabel="BUILDDIR" role="varname">BUILDDIR</entry>
+                <entry>
+                  Directory where object files and executables are built.
+                  This value is relative to <xref linkend="var.OUTPUT_FILE"/>.
+                </entry>
+                <entry role="default">(depends on format)</entry>
+              </row>
+
+            </tbody>
+          </tgroup>
+        </informaltable>
+
+      </para>
+
+      <section id="sec.install.dirs">
+        <title>Installation Directories</title>
+
+        <para>
+          These are standard installation directories as used on Unix (most
+          notably in Autoconf). They are used by <command>install</command>
+          target if the backend supports it. They are defined on all platforms.
+          You can change their values freely (unless you are using Autoconf
+          backend).
+          <informaltable>
+            <tgroup cols='3'>
+              <thead>
+                <row>
+                  <entry>Variable name</entry>
+                  <entry>Description</entry>
+                  <entry>Default</entry>
+                </row>
+              </thead>
+              <tbody>
+
+                <row>
+                  <entry id="var.PREFIX" xreflabel="PREFIX" role="varname">PREFIX</entry>
+                  <entry>Base directory for installed files.</entry>
+                  <entry role="default">/usr/local on Unix</entry>
+                </row>
+
+                <row>
+                  <entry id="var.BINDIR" xreflabel="BINDIR" role="varname">BINDIR</entry>
+                  <entry>Directory where programs are installed.</entry>
+                  <entry role="default">$(PREFIX)/bin on Unix</entry>
+                </row>
+
+                <row>
+                  <entry id="var.LIBDIR" xreflabel="LIBDIR" role="varname">LIBDIR</entry>
+                  <entry>Directory where libraries are installed.</entry>
+                  <entry role="default">$(PREFIX)/lib on Unix</entry>
+                </row>
+
+                <row>
+                  <entry id="var.DLLDIR" xreflabel="DLLDIR" role="varname">DLLDIR</entry>
+                  <entry>Directory where DLLs are installed.</entry>
+                  <entry role="default">
+                    $(PREFIX)/lib on Unix, $(PREFIX)/bin when targetting
+                    win32
+                  </entry>
+                </row>
+
+                <row>
+                  <entry id="var.INCLUDEDIR" xreflabel="INCLUDEDIR" role="varname">INCLUDEDIR</entry>
+                  <entry>Directory where C and C++ headers are installed.</entry>
+                  <entry role="default">$(PREFIX)/include on Unix</entry>
+                </row>
+
+                <row>
+                  <entry id="var.DATADIR" xreflabel="DATADIR" role="varname">DATADIR</entry>
+                  <entry>Directory where data files are installed.</entry>
+                  <entry role="default">$(PREFIX)/share on Unix</entry>
+                </row>
+
+
+              </tbody>
+            </tgroup>
+          </informaltable>
+        </para>
+      </section>
+
+
+    </section>
+
+
+    <!-- =============================================================== -->
+    <!--                          Platform                               -->
+    <!-- =============================================================== -->
+
+    <section id="platform">
+      <title>Recognizing Platform</title>
+
+      <para>
+        All of these are variables defined to either 0 or 1, with the
+        exception of <literal>autoconf</literal> format backend where they are
+        options.
+      </para>
+      <para>
+        <informaltable>
+          <tgroup cols='2'>
+            <thead>
+              <row>
+                <entry>Variable name</entry>
+                <entry>Description</entry>
+              </row>
+            </thead>
+            <tbody>
+
+              <row>
+                <entry role="varname">PLATFORM_UNIX</entry>
+                <entry>UNIX variant</entry>
+              </row>
+              <row>
+                <entry role="varname">PLATFORM_WIN32</entry>
+                <entry>32bit Windows</entry>
+              </row>
+              <row>
+                <entry role="varname">PLATFORM_MSDOS</entry>
+                <entry>MS-DOS</entry>
+              </row>
+              <row>
+                <entry role="varname">PLATFORM_MAC</entry>
+                <entry>Mac OS X or Mac Classic</entry>
+              </row>
+              <row>
+                <entry role="varname">PLATFORM_MACOSX</entry>
+                <entry>Mac OS X</entry>
+              </row>
+              <row>
+                <entry role="varname">PLATFORM_OS2</entry>
+                <entry>OS/2</entry>
+              </row>
+              <row>
+                <entry role="varname">PLATFORM_BEOS</entry>
+                <entry>BeOS</entry>
+              </row>
+              <row>
+                <entry role="varname">PLATFORM_SYMBIAN</entry>
+                <entry>Symbian OS</entry>
+              </row>
+
+            </tbody>
+          </tgroup>
+        </informaltable>
+      </para>
+
+    </section>
+
+
+
+
+
+    <!-- =============================================================== -->
+    <!--                      Format feature tests                       -->
+    <!-- =============================================================== -->
+
+    <section id="sec.format.features">
+      <title>Format features</title>
+
+      <para>
+        <informaltable>
+          <tgroup cols='2'>
+            <thead>
+              <row>
+                <entry>Variable name</entry>
+                <entry>Description</entry>
+              </row>
+            </thead>
+            <tbody>
+
+              <row id="var.FORMAT_HAS_VARIABLES" xreflabel="FORMAT_HAS_VARIABLES">
+                <entry role="varname">FORMAT_HAS_VARIABLES</entry>
+                <entry>
+                    This boolean flag indicates whether the output format supports variables.
+                    If it does, then some space and time optimization are possible and long
+                    Bakefile variables that would otherwise be expanded into literals are left
+                    as variables in generated makefile/project.
+                </entry>
+              </row>
+
+              <row id="var.FORMAT_SUPPORTS_CONDITIONS" xreflabel="FORMAT_SUPPORTS_CONDITIONS">
+                <entry role="varname">FORMAT_SUPPORTS_CONDITIONS</entry>
+                <entry>
+                    Whether the output format can handle conditions (i.e. variable values
+                    depending on conditions and conditionally built targets) at all. Most
+                    make-tools do, but e.g. MSVC project files can't do it. If set to 0, then
+                    the targets and variables are "flattened", i.e. expanded into multiple
+                    'configurations' as in many IDEs.
+                </entry>
+              </row>
+
+              <row id="var.FORMAT_SUPPORTS_CONFIGURATIONS" xreflabel="FORMAT_SUPPORTS_CONFIGURATIONS">
+                <entry role="varname">FORMAT_SUPPORTS_CONFIGURATIONS</entry>
+                <entry>
+                    Whether it is at least possible to have multiple configurations if
+                    conditions are not supported (such as in IDEs). Meaningless if
+                    FORMAT_SUPPORTS_CONDITIONS=1. If both FORMAT_SUPPORTS_CONDITIONS and
+                    FORMAT_SUPPORTS_CONFIGURATIONS are 0, then we're in deep trouble and
+                    we can only generate makefiles that are not configurable.
+                </entry>
+              </row>
+
+              <row id="var.FORMAT_SUPPORTS_ACTIONS" xreflabel="FORMAT_SUPPORTS_ACTIONS">
+                <entry role="varname">FORMAT_SUPPORTS_ACTIONS</entry>
+                <entry>
+                    Whether the output format can handle <xref linkend="rule.action"/>s at all.
+                    Most make-tools do, but IDE project files typically don't.
+                </entry>
+              </row>
+
+              <row id="var.FORMAT_SUPPORTS_SUBPROJECTS" xreflabel="FORMAT_SUPPORTS_SUBPROJECTS">
+                <entry role="varname">FORMAT_SUPPORTS_SUBPROJECTS</entry>
+                <entry>
+                    Whether the output format can handle <xref linkend="rule.subproject"/>s at all.
+                    Most make-tools do, but IDE project files typically don't.
+                </entry>
+              </row>
+
+              <row id="var.FORMAT_NEEDS_OPTION_VALUES_FOR_CONDITIONS" xreflabel="FORMAT_NEEDS_OPTION_VALUES_FOR_CONDITIONS">
+                <entry role="varname">FORMAT_NEEDS_OPTION_VALUES_FOR_CONDITIONS</entry>
+                <entry>
+                    Whether the output format needs to have options that are
+                    used by conditions listed in the output file. This is true
+                    in majority of cases because the conditions take form such
+                    as <literal>"!if $(OPT) == value"</literal> and OPT must
+                    be defined, but there's one exception: autoconf. It
+                    decides on whether the condition is true or false in
+                    autoconf_inc.m4 and Makefile.in does not need the
+                    variables, so we can safely purge them and save some
+                    space.
+                </entry>
+              </row>
+
+            </tbody>
+          </tgroup>
+        </informaltable>
+
+      </para>
+
+    </section>
+
+
+
+    <!-- =============================================================== -->
+    <!--                        Miscellaneous                            -->
+    <!-- =============================================================== -->
+
+    <section id="sec.misc.vars">
+      <title>Miscellaneous</title>
+
+      <para>
+        <informaltable>
+          <tgroup cols='2'>
+            <thead>
+              <row>
+                <entry>Variable name</entry>
+                <entry>Description</entry>
+              </row>
+            </thead>
+            <tbody>
+
+              <row>
+                <entry role="varname">BAKEFILE_VERSION</entry>
+                <entry>
+                  String with Bakefile version number. The version is formed from
+                  three numbers delimined by period. Read only.
+                </entry>
+              </row>
+
+              <row id="var.OPTIONS" xreflabel="OPTIONS">
+                <entry role="varname">OPTIONS</entry>
+                <entry>
+                  Space-separation list of
+                  <link linkend="concept.option">options</link> defined in
+                  the makefiles. Note that the value of this variable
+                  changes during processing as new options are defined!
+                </entry>
+                <entry role="default"></entry>
+              </row>
+
+              <row id="var.INPUT_FILE" xreflabel="INPUT_FILE">
+                <entry role="varname">INPUT_FILE</entry>
+                <entry>
+                  Name of input file. The name is always absolute path.
+                  Read only.
+                </entry>
+              </row>
+
+              <row id="var.INPUT_FILE_ARG" xreflabel="INPUT_FILE_ARG">
+                <entry role="varname">INPUT_FILE_ARG</entry>
+                <entry>
+                  Same as <link linkend="var.INPUT_FILE">INPUT_FILE</link>, but
+                  the name is in exactly same form as it was passed on command
+                  line, it's not made absolute as in case of
+                  <varname>INPUT_FILE</varname>.
+                </entry>
+              </row>
+
+              <row id="var.OUTPUT_FILE" xreflabel="OUTPUT_FILE">
+                <entry role="varname">OUTPUT_FILE</entry>
+                <entry>
+                  Name of the file where generated native makefile will be
+                  written. Read only.
+                </entry>
+              </row>
+
+              <row>
+                <entry role="varname">FORMAT</entry>
+                <entry>
+                  Format of makefile currently being generated, e.g.
+                  <literal>autoconf</literal>. Always constant expression.
+                </entry>
+              </row>
+
+              <row>
+                <entry role="varname">COMPILER</entry>
+                <entry>
+                  Short identifier of used compiler (e.g. "bcc" or "vc6"). This
+                  variable is only defined for Windows compilers and is
+                  guaranteed to evaluate to constant expression.
+                </entry>
+              </row>
+
+              <row>
+                <entry role="varname">TOOLSET</entry>
+                <entry>
+                  What kind of tools the makefile uses. Use this to determine
+                  what commands to put into
+                  <xref linkend="tags.action.command"/> tags.
+                  Can be one of <literal>win32</literal>,
+                  <literal>unix</literal>. Always a constanst expression.
+                </entry>
+              </row>
+              
+              <row>
+                <entry role="varname">EOL_STYLE</entry>
+                <entry>
+                  Default line endings style for current format, one of
+                  <literal>unix</literal>, <literal>dos</literal> and
+                  <literal>mac</literal>.
+                </entry>
+              </row>
+
+              <row>
+                <entry role="varname">LF</entry>
+                <entry>
+                  Line feed character (\n in C).
+                </entry>
+              </row>
+
+              <row>
+                <entry role="varname">TAB</entry>
+                <entry>
+                  Tabelator character (\t in C).
+                </entry>
+              </row>
+
+              <row>
+                <entry role="varname">DOLLAR</entry>
+                <entry>
+                  Dollar sign ($).
+                </entry>
+              </row>
+
+              <row>
+                <entry role="varname">SPACE</entry>
+                <entry>
+                  Space character (" "). Note that <varname>SPACE</varname>
+                  is not evaluated and so you can't use it in places where
+                  constant expression is expected.
+                </entry>
+              </row>
+
+              <row id="var.DIRSEP" xreflabel="DIRSEP">
+                <entry role="varname">DIRSEP</entry>
+                <entry>
+                  Character used to separate directory components in paths on
+                  target platform (/ on Unix, \ on Windows).
+                </entry>
+              </row>
+
+            </tbody>
+          </tgroup>
+        </informaltable>
+
+      </para>
+
+    </section>
+
+
+
+  </section>
+
+  
+  
+  <section id="sec.make.vars">
+    <title>Standard makefile variables</title>
+    <para>
+      Makefile-based formats (<literal>gnu</literal>, <literal>msvc</literal>
+      etc.) define standard options <literal>CC</literal>,
+      <literal>CXX</literal>, <literal>CFLAGS</literal>,
+      <literal>CXXFLAGS</literal>, <literal>CPPFLAGS</literal>,
+      <literal>LDFLAGS</literal> for specifying the compiler and its
+      flags. Their default values are set to the default or typical compiler.
+      If necessary, the defaults for <literal>FOO</literal> can be overriden
+      by setting the <literal>DEFAULT_FOO</literal> (e.g.
+      <literal>DEFAULT_CXX</literal> for the C++ compiler) variable to
+      a constant value anywhere in user bakefiles.
+    </para>
+  </section>
+
+
+  <section id="sec.format.vars">
+    <title>Format specific variables</title>
+
+
+    <section id="sec.autoconf.vars">
+      <title>autoconf</title>
+      <para>
+        <informaltable>
+          <tgroup cols='3'>
+            <thead>
+              <row>
+                <entry>Variable name</entry>
+                <entry>Description</entry>
+                <entry>Default</entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry role="varname">AUTOCONF_MACROS_FILE</entry>
+                <entry>
+                  <para>
+                  Where <filename>configure.in</filename> macros for setting
+                  options and conditional variables (mostly
+                  <function>AC_SUBST</function>
+                  calls) are written. This file <emphasis>must</emphasis> be
+                  included by your <filename>configure.in</filename> script.
+                  Set it to empty string to disable creation of this file
+                  (e.g. for subprojects of main project, see also
+                  <link  linkend="var.OPTIONS_FILE">
+                    <varname>OPTIONS_FILE</varname>
+                  </link>).
+                  </para>
+                  <para>
+                    Note that the value of <varname>AUTOCONF_MACROS_FILE</varname>
+                    <emphasis>shouldn't</emphasis> be set manually; if you want
+                    to change it, use the
+                    <command>autoconf-needs-macro</command> command. For example:
+                    <programlisting><![CDATA[
+<makefile>
+  <autoconf-needs-macro>AC_BAKEFILE_PYTHON</autoconf-needs-macro>
+  ..
+</makefile>
+]]></programlisting>
+                    The argument to <command>autoconf-needs-macro</command>
+                    must be a constant expression. It can be repeated more
+                    than once.
+                  </para>
+                </entry>
+                <entry role="default">autoconf_inc.m4</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+      </para>
+    </section>
+    
+    
+    <section id="sec.dmars.vars">
+      <title>dmars, dmars_smake</title>
+      <para>
+        <informaltable>
+          <tgroup cols='3'>
+            <thead>
+              <row>
+                <entry>Variable name</entry>
+                <entry>Description</entry>
+                <entry>Default</entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry role="varname">DMARS_MEM_POOL_SIZE</entry>
+                <entry>
+                  Specifies size of memory pool used by the
+                  <command>dmc</command> compiler. The default should be
+                  sufficient most of the time and only needs increasing if the
+                  compiler fails to compile source code with out of memory
+                  errors.
+                </entry>
+                <entry role="default">99</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+      </para>
+    </section>
+
+
+    <section id="sec.msvs2005prj.vars">
+      <title>msvs2005prj, msvs2008prj</title>
+      <para>
+        <informaltable>
+          <tgroup cols='3'>
+            <thead>
+              <row>
+                <entry>Variable name</entry>
+                <entry>Description</entry>
+                <entry>Default</entry>
+              </row>
+            </thead>
+            <tbody>
+              <row id="var.MSVS_PLATFORMS" xreflabel="MSVS_PLATFORMS">
+                <entry role="varname">MSVS_PLATFORMS</entry>
+                <entry>
+                  Comma-separated list of platforms to generate project
+                  configurations for. Can be set by the user using the
+                  <literal>-D</literal> command line argument.
+                  See <link linkend="format.msvs2005prj">
+                  MS VisualStudio 2005/2008 format documentation
+                  </link>
+                  for details.
+                </entry>
+                <entry role="default">win32</entry>
+              </row>
+              <row id="var.MSVS_PLATFORM" xreflabel="MSVS_PLATFORM">
+                <entry role="varname">MSVS_PLATFORM</entry>
+                <entry>
+                  This variable is not meant to be set by the user. It's
+                  an <link linkend="concept.option">option</link> created by
+                  the format itself. It's allowed values are values from
+                  <xref linkend="var.MSVS_PLATFORMS"/> variable set by the
+                  user. It can be used by the bakefiles to generate different
+                  project settings for different platform, in the same way
+                  user-added options are used.
+                </entry>
+                <entry role="default"></entry>
+              </row>
+              <row id="var.MSVS_PROJECT_FILE" xreflabel="MSVS_PROJECT_FILE">
+                <entry role="varname">MSVS_PROJECT_FILE</entry>
+                <entry>
+                  Unlike other variables in this section, this variable can
+                  optionally be set <emphasis>on targets</emphasis> to specify
+                  the location of <literal>.vcproj</literal> file created for
+                  them. The location is relative to
+                  <xref linkend="var.OUTPUT_FILE"/>. See an example:
+                  <programlisting><![CDATA[
+<exe id="hello_world">
+  ...
+  <!-- create subdirectory for projects if needed and put it there -->
+  <set var="MSVS_PROJECT_FILE">examples/HelloWorld.vcproj</set>
+</exe>
+]]></programlisting>
+                </entry>
+                <entry role="default">(derived from <xref linkend="var.OUTPUT_FILE"/>)</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+      </para>
+    </section>
+
+
+    <section id="sec.msvs2003prj.vars">
+      <title>msvs2003prj</title>
+      <para>
+        The <xref linkend="var.MSVS_PLATFORM"/> option is present in
+        this format as well, but it is always set to <literal>win32</literal>.
+        <xref linkend="var.MSVS_PROJECT_FILE"/> is fully supported.
+      </para>
+    </section>
+
+  </section>
+
+</chapter>
