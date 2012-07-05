@@ -1,0 +1,62 @@
+###README
+###
+#Below steps are what I have done to build mysql++ successfully from source on amd64.
+#Right now I have configured it to my libmysqlclient-dev path which you can find
+#by doing:
+#mysql_config --libs
+#it's the path after -I
+#Right now I have configured it so that just make && make install would install mysql++
+#If you want to build it for your own pc I suggest you follow these steps:
+
+
+#a dependency
+#sudo apt-get install libmysql++-dev
+####################
+#alternative to building from source: 
+#http://tangentsoft.net/mysql++/
+#see bottom for fixing compile issues on your project
+#####################################
+#mysql++ library used for wxipp project.
+
+#to build from source we need to bake it first with bakefile - we first needs tools to build bakefile, then we can use ./bootstrap to bake mysqlpp
+sudo apt-get install python-dev libtool \
+swig \
+#(swig was not needed i think)
+autoconf 
+
+#now that the building tools are installed we build bakefile
+#http://sourceforge.net/projects/bakefile/
+
+#we get the source from there and its a simple configure make make install
+
+#after bakefile is installed go to the mysql++ dir and do
+./bootstrap --with-mysql-lib=/usr/lib/x86_64-linux-gnu
+#with-mysql-lib=<path> as <path> is where libmysqlclient-dev is installed (mine is amd64 so I had to manually set the path)
+
+#there was an error about lower_str function to fix do
+g++ -o test_ssqls2 test_ssqls2_ssqls2.o -lmysqlpp_ssqls2parse -WI,--as-needed -L. -L/usr/local/lib/mysql -lmysqlclient -lmysqlpp
+
+#then we build mysql++
+sudo make
+sudo make install
+
+##############
+#IMPORTANT fix
+###############
+#watch out for the following in mysql++/common.h, there are two blocks like that, just add mysql/ dir before the includes and it works fine
+
+#if defined(MYSQLPP_MYSQL_HEADERS_BURIED)
+#	include <mysql/mysql_version.h>
+#else
+#	include <mysql_version.h>
+#endif
+
+#change it to 
+
+#if defined(MYSQLPP_MYSQL_HEADERS_BURIED)
+#	include <mysql/mysql_version.h>
+#else
+#	include <mysql/mysql_version.h>
+#endif
+
+#and its all fine
